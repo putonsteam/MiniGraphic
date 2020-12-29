@@ -13,5 +13,6 @@ private:
 	void LoadRenderItem();
 	PipelineState mPSO;
 	LoadMaterial mMaterial;
+	RootSignature mRootSignature;
 	//GraphicEngine engine;
 };

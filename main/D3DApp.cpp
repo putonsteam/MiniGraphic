@@ -26,7 +26,10 @@ void D3DApp::LoadRenderItem()
 // 	LoadTexture tex;
 	mMaterial.LoadTexture("skullMat", L"text");
 
-	mPSO.BuildPSO("opaque", L"Shaders\\Default.hlsl", L"Shaders\\Default.hlsl", );
+	mRootSignature.BuildBaseRootSignature();
+
+	mPSO.BuildPSO("opaque", L"Shaders\\Default.hlsl", L"Shaders\\Default.hlsl", mRootSignature.mBaseRootSignature);
+
 	//LoadMaterial();
 	//LoadLighting();
 }
