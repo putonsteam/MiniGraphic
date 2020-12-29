@@ -1,5 +1,7 @@
 #pragma once
 #include "framework.h"
+#include "ShaderState.h"
+#include "PipelineState.h"
 
 class D3DApp
 {
@@ -8,7 +10,8 @@ public:
 	void Run();
 
 private:
-	void LoadMesh();
-
+	void LoadRenderItem();
+	PipelineState mPSO;
+	LoadMaterial mMaterial;
 	//GraphicEngine engine;
 };

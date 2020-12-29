@@ -1,15 +1,6 @@
 #include "GraphicEngine.h"
 
-GraphicEngine* GraphicEngine::m_pInstance = nullptr;
-
-GraphicEngine* GraphicEngine::GetInstance()
-{
-	if (m_pInstance)
-	{
-		m_pInstance = new GraphicEngine;
-	}
-	return m_pInstance;
-}
+IMPLEMENT_SINGLE(GraphicEngine)
 
 bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level)
 {
@@ -307,3 +298,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
 // 
 // 	return byteCode;
 // }
+
+GraphicEngine* GetEngine()
+{
+	return CALL_SINGLE(GraphicEngine);
+}

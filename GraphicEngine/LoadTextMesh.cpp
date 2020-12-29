@@ -1,4 +1,6 @@
 #include "LoadTextMesh.h"
+#include "GraphicEngine.h"
+#include "ResourceStruct.h"
 
 using Microsoft::WRL::ComPtr;
 MeshGeometry* LoadTextMesh::Load(const char* file)

@@ -3,7 +3,6 @@
 //
 
 #pragma once
-
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files
@@ -13,20 +12,15 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
 #include <dxgi1_6.h>
 #include <d3d12.h>
 #include <atlbase.h>
 #include "d3dx12.h"
 #include <DirectXMath.h>
 #include "DXSampleHelper.h"
-
-#include <windows.h>
 #include <wrl.h>
 #include <dxgi1_4.h>
-#include <d3d12.h>
 #include <D3Dcompiler.h>
-#include <DirectXMath.h>
 #include <DirectXPackedVector.h>
 #include <DirectXColors.h>
 #include <DirectXCollision.h>
@@ -40,7 +34,11 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
-#include "d3dx12.h"
 //#include "DDSTextureLoader.h"
 #include "MathHelper.h"
+#include "Macro.h"
+using namespace DirectX;
+using namespace Microsoft::WRL;
+using namespace std;
+using namespace DirectX;
 //#include "DeviceResources.h"

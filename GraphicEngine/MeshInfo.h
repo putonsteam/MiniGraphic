@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GraphicHeader.h"
+#include "framework.h"
 
 // Defines a subrange of geometry in a MeshGeometry.  This is for when multiple
 // geometries are stored in one vertex and index buffer.  It provides the offsets

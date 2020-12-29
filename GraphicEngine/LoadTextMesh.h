@@ -1,8 +1,6 @@
 #pragma once
-//#include "framework.h"
-#include "GraphicHeader.h"
+#include "framework.h"
 #include "MeshInfo.h"
-
 
 class LoadTextMesh
 {
