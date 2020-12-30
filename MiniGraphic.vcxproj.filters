@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{5ee3d091-b82c-42a2-8f3c-0d75582b1f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Feature">
+      <UniqueIdentifier>{6424ee60-f899-42a5-93f3-f29f85a5da53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{add7530b-c633-4f98-b91a-2de87b5fb147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GraphicEngine">
+      <UniqueIdentifier>{fb4d795a-85c4-4bb4-8284-3f8b2a56e808}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="HeaderFiles">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GraphicEngine\GraphicEngine.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\framework.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\Resource.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\targetver.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="main\WindowsInput.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="main\D3DWindows.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\d3dx12.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="main\D3DApp.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\MathHelper.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\LoadTextMesh.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\ResourceStruct.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\MeshInfo.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\GraphicHeader.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\Macro.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\RenderItem.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\Lighting.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\DDSTextureLoader.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\LoadTexture.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\LoadMaterial.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\ConstantBuffer.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\PipelineState.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\ShaderState.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\RootSignature.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="main\main.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="main\D3DWindows.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="main\WindowsInput.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="main\D3DApp.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\MathHelper.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\LoadTextMesh.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\MeshInfo.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\RenderItem.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\LoadTexture.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\LoadMaterial.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\ConstantBuffer.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\PipelineState.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\ShaderState.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\RootSignature.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MiniGraphic.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="MiniGraphic.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
