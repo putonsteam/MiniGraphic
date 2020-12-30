@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -96,7 +96,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;d3dcompiler.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,12 +153,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GraphicEngine\ConstantBuffer.h" />
+    <ClInclude Include="GraphicEngine\DDSTextureLoader.h" />
     <ClInclude Include="GraphicEngine\GraphicEngine.h" />
     <ClInclude Include="GraphicEngine\GraphicHeader.h" />
+    <ClInclude Include="GraphicEngine\Lighting.h" />
     <ClInclude Include="GraphicEngine\LoadTextMesh.h" />
+    <ClInclude Include="GraphicEngine\LoadMaterial.h" />
     <ClInclude Include="GraphicEngine\MeshInfo.h" />
+    <ClInclude Include="GraphicEngine\PipelineState.h" />
+    <ClInclude Include="GraphicEngine\RenderItem.h" />
     <ClInclude Include="GraphicEngine\ResourceStruct.h" />
+    <ClInclude Include="GraphicEngine\LoadTexture.h" />
+    <ClInclude Include="GraphicEngine\RootSignature.h" />
+    <ClInclude Include="GraphicEngine\ShaderState.h" />
     <ClInclude Include="HeaderFiles\framework.h" />
+    <ClInclude Include="HeaderFiles\Macro.h" />
     <ClInclude Include="HeaderFiles\Resource.h" />
     <ClInclude Include="HeaderFiles\targetver.h" />
     <ClInclude Include="main\D3DApp.h" />
@@ -168,9 +178,17 @@
     <ClInclude Include="Tools\MathHelper.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GraphicEngine\ConstantBuffer.cpp" />
+    <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp" />
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp" />
     <ClCompile Include="GraphicEngine\LoadTextMesh.cpp" />
+    <ClCompile Include="GraphicEngine\LoadMaterial.cpp" />
     <ClCompile Include="GraphicEngine\MeshInfo.cpp" />
+    <ClCompile Include="GraphicEngine\PipelineState.cpp" />
+    <ClCompile Include="GraphicEngine\RenderItem.cpp" />
+    <ClCompile Include="GraphicEngine\LoadTexture.cpp" />
+    <ClCompile Include="GraphicEngine\RootSignature.cpp" />
+    <ClCompile Include="GraphicEngine\ShaderState.cpp" />
     <ClCompile Include="main\D3DApp.cpp" />
     <ClCompile Include="main\D3DWindows.cpp" />
     <ClCompile Include="main\main.cpp" />
