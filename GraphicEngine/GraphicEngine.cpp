@@ -162,14 +162,14 @@ void GraphicEngine::Flush()
 
 ID3D12Resource* GraphicEngine::CurrentBackBuffer()const
 {
-	return mSwapChainBuffer[mCurrBackBuffer].Get();
+	return mSwapChainBuffer[mCurrBackBufferIndex].Get();
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::CurrentBackBufferView()const
 {
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		mRtvHeap->GetCPUDescriptorHandleForHeapStart(),
-		mCurrBackBuffer,
+		mCurrBackBufferIndex,
 		mRtvDescriptorSize);
 }
 
@@ -253,7 +253,7 @@ void GraphicEngine::InitSwapchainAndRvt()
 	ThrowIfFailed(m_D3DDevice->CreateDescriptorHeap(
 		&rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
 
-	mCurrBackBuffer = 0;
+	mCurrBackBufferIndex = 0;
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
@@ -331,10 +331,10 @@ void GraphicEngine::Run()
 
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
+ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
 	const void* initData,
 	UINT64 byteSize,
-	Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer)
+	ComPtr<ID3D12Resource>& uploadBuffer)
 {
 	ComPtr<ID3D12Resource> defaultBuffer;
 

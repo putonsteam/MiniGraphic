@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    Microsoft::WRL::ComPtr<ID3D12Resource> mUploadBuffer;
+    ComPtr<ID3D12Resource> mUploadBuffer;
     BYTE* mMappedData = nullptr;
 
     UINT mElementByteSize = 0;

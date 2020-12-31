@@ -6,28 +6,7 @@
 
 #pragma once
 
-#include <windows.h>
-#include <wrl.h>
-#include <dxgi1_4.h>
-#include <d3d12.h>
-#include <D3Dcompiler.h>
-#include <DirectXMath.h>
-#include <DirectXPackedVector.h>
-#include <DirectXColors.h>
-#include <DirectXCollision.h>
-#include <string>
-#include <memory>
-#include <algorithm>
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <cstdint>
-#include <fstream>
-#include <sstream>
-#include <cassert>
-#include "d3dx12.h"
-#include "DDSTextureLoader.h"
-#include "MathHelper.h"
+#include "framework.h"
 
 //extern const int gNumFrameResources;
 
@@ -112,16 +91,16 @@ public:
         return (byteSize + 255) & ~255;
     }
 
-    static Microsoft::WRL::ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
+    static ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+    static ComPtr<ID3D12Resource> CreateDefaultBuffer(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const void* initData,
         UINT64 byteSize,
-        Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
+        ComPtr<ID3D12Resource>& uploadBuffer);
 
-	static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+	static ComPtr<ID3DBlob> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
@@ -154,7 +133,7 @@ struct SubmeshGeometry
 
     // Bounding box of the geometry defined by this submesh. 
     // This is used in later chapters of the book.
-	DirectX::BoundingBox Bounds;
+	BoundingBox Bounds;
 };
 
 struct MeshGeometry
@@ -164,14 +143,14 @@ struct MeshGeometry
 
 	// System memory copies.  Use Blobs because the vertex/index format can be generic.
 	// It is up to the client to cast appropriately.  
-	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
+	ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
+	ComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
+	ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
+	ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
+	ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
+	ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
 
     // Data about the buffers.
 	UINT VertexByteStride = 0;
@@ -214,11 +193,11 @@ struct MeshGeometry
 
 // struct Light
 // {
-//     DirectX::XMFLOAT3 Strength = { 0.5f, 0.5f, 0.5f };
+//     XMFLOAT3 Strength = { 0.5f, 0.5f, 0.5f };
 //     float FalloffStart = 1.0f;                          // point/spot light only
-//     DirectX::XMFLOAT3 Direction = { 0.0f, -1.0f, 0.0f };// directional/spot light only
+//     XMFLOAT3 Direction = { 0.0f, -1.0f, 0.0f };// directional/spot light only
 //     float FalloffEnd = 10.0f;                           // point/spot light only
-//     DirectX::XMFLOAT3 Position = { 0.0f, 0.0f, 0.0f };  // point/spot light only
+//     XMFLOAT3 Position = { 0.0f, 0.0f, 0.0f };  // point/spot light only
 //     float SpotPower = 64.0f;                            // spot light only
 // };
 // 
@@ -226,12 +205,12 @@ struct MeshGeometry
 
 // struct MaterialConstants
 // {
-// 	DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-// 	DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
+// 	XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+// 	XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
 // 	float Roughness = 0.25f;
 // 
 // 	// Used in texture mapping.
-// 	DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
+// 	XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 // };
 
 // Simple struct to represent a material for our demos.  A production 3D engine
@@ -257,10 +236,10 @@ struct MeshGeometry
 // 	int NumFramesDirty = gNumFrameResources;
 // 
 // 	// Material constant buffer data used for shading.
-// 	DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-// 	DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
+// 	XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+// 	XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
 // 	float Roughness = .25f;
-// 	DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
+// 	XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 // };
 
 // struct Texture
@@ -270,8 +249,8 @@ struct MeshGeometry
 // 
 // 	std::wstring Filename;
 // 
-// 	Microsoft::WRL::ComPtr<ID3D12Resource> Resource = nullptr;
-// 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadHeap = nullptr;
+// 	ComPtr<ID3D12Resource> Resource = nullptr;
+// 	ComPtr<ID3D12Resource> UploadHeap = nullptr;
 // };
 
 #ifndef ThrowIfFailed

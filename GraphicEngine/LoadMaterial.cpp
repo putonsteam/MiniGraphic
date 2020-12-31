@@ -1,7 +1,7 @@
 #include "LoadMaterial.h"
 #include "GraphicEngine.h"
 
-void LoadMaterial::AddMaterial(string name, int CBIndex, DirectX::XMFLOAT4& diffuse, DirectX::XMFLOAT3& fresnel, float rough)
+void LoadMaterial::AddMaterial(string name, int CBIndex, XMFLOAT4& diffuse, XMFLOAT3& fresnel, float rough)
 {
 	Name = name;
 	MatCBIndex = CBIndex;
@@ -15,9 +15,9 @@ void LoadMaterial::AddMaterial(string name, int CBIndex, DirectX::XMFLOAT4& diff
 
 void LoadMaterial::SetDiffuseSrv(const wchar_t* file)
 {
-	DiffuseSrvHeapIndex = GetEngine()->GetTextureList().Load(file);
+	DiffuseSrvHeapIndex = GetEngine()->GetTextureList()->Load(file);
 }
 void LoadMaterial::SetNormaSrv(const wchar_t* file)
 {
-	NormalSrvHeapIndex = GetEngine()->GetTextureList().Load(file);
+	NormalSrvHeapIndex = GetEngine()->GetTextureList()->Load(file);
 }

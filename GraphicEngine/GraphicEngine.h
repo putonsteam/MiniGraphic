@@ -16,20 +16,22 @@ static const int SwapChainBufferCount = 2;
 
 class GraphicEngine
 {
-	GraphicEngine(); 
 	DECLARE_SINGLE(GraphicEngine)
+
 public:
+	GraphicEngine();
 	bool Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level);
+	void InitDescriptorHeap(int size);
 	void Run();
 	void Flush();
 
 	//camera
 	void SetPosition(float x, float y, float z);
-	void SetPosition(const DirectX::XMFLOAT3& v);
-	DirectX::XMMATRIX GetView()const;
-	DirectX::XMMATRIX GetProj()const;
-	DirectX::XMVECTOR GetPosition()const;
-	DirectX::XMFLOAT3 GetPosition3f()const;
+	void SetPosition(const XMFLOAT3& v);
+	XMMATRIX GetView()const;
+	XMMATRIX GetProj()const;
+	XMVECTOR GetPosition()const;
+	XMFLOAT3 GetPosition3f()const;
 
 	// Convenience overrides for handling mouse input.
 	//void OnMouseDown(WPARAM btnState, int x, int y);
@@ -37,27 +39,38 @@ public:
 	void OnMouseMove(WPARAM btnState, int x, int y);
 	void OnKeyboardInput(const GameTimer& gt);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+	ComPtr<ID3D12Resource> CreateDefaultBuffer(
 		const void* initData,
 		UINT64 byteSize,
-		Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
+		ComPtr<ID3D12Resource>& uploadBuffer);
 
-	ComPtr<ID3D12Device> GetDevice() { return m_D3DDevice; }
-	ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return mCommandList; }
-	LoadTexture& GetTextureList() { return TextureList; }
+	ID3D12Device* GetDevice() { return m_D3DDevice.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() { return mCommandQueue.Get(); }
+	ID3D12CommandAllocator* GetCommandAlloc() { return mDirectCmdListAlloc.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() { return mCommandList.Get(); }
+	D3D12_VIEWPORT* GetViewport() { return &mScreenViewport; }
+	D3D12_RECT* GetScissor() { return &mScissorRect; }
+	IDXGISwapChain* GetSwapChain() { return mSwapChain.Get(); }
+	LoadTexture* GetTextureList() { return &TextureList; }
 	DescriptorHeap* GetDescriptorHeap() { return mDescriptorHeap; }
-	void InitDescriptorHeap(int size);
-	ShaderState& GetShader() { return mShader; }
+	ShaderState* GetShader() { return &mShader; }
+	Camera* GetCamera() { return &mCamera; }
 	FrameResource* GetFrameResource() { return mFrameResource; }
+	ID3D12DescriptorHeap* GetSrvDescHeap() { return GetDescriptorHeap()->GetSrvDescHeap(); }
 	ID3D12Fence* GetFence() { return m_Fence.Get(); }
 	UINT64 GetCurrentFence() { return m_CurrentFence; }
+
 	UINT64 IncreaseFence() { return ++m_CurrentFence; }
 	void SendCommandAndFulsh();
+	int GetCurrBackBufferIndex() { return mCurrBackBufferIndex; }
+	void SetCurrBackBufferIndex()
+	{
+		mCurrBackBufferIndex = (mCurrBackBufferIndex + 1) % SwapChainBufferCount;
+	}
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
 
-public:
 	UINT mRtvDescriptorSize = 0;
 	UINT mDsvDescriptorSize = 0;
 	UINT mCbvSrvUavDescriptorSize = 0;
@@ -67,7 +80,7 @@ public:
 	int mClientWidth = 800;
 	int mClientHeight = 600;
 
-public:
+private:
 	bool InitDevice();
 	void InitGPUCommand();
 	void InitDesHeap();
@@ -76,26 +89,26 @@ public:
 	void InitViewportAndScissor();
 
 
-	Microsoft::WRL::ComPtr<IDXGIFactory4>               m_DxgiFactory;
+	ComPtr<IDXGIFactory4>               m_DxgiFactory;
 	std::wstring                                        m_AdapterDescription;
 	ComPtr<IDXGIAdapter1>                               m_Adapter;
-	Microsoft::WRL::ComPtr<ID3D12Device>                m_D3DDevice;
+	ComPtr<ID3D12Device>                m_D3DDevice;
 	D3D_FEATURE_LEVEL                                   m_D3DMinFeatureLevel;
 
-	Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
+	ComPtr<ID3D12Fence> m_Fence;
 	UINT64 m_CurrentFence = 0;
 
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> mCommandQueue;
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mCommandList;
+	ComPtr<ID3D12CommandQueue> mCommandQueue;
+	ComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
+	ComPtr<ID3D12GraphicsCommandList> mCommandList;
 
-	Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
-	int mCurrBackBuffer = 0;
-	Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
+	ComPtr<IDXGISwapChain> mSwapChain;
+	int mCurrBackBufferIndex = 0;
+	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
+	ComPtr<ID3D12DescriptorHeap> mRtvHeap;
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
-	Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
+	ComPtr<ID3D12DescriptorHeap> mDsvHeap;
+	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
 	D3D12_VIEWPORT mScreenViewport;
 	D3D12_RECT mScissorRect;

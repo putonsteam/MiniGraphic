@@ -6,7 +6,6 @@
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files
-#include <windows.h>
 // C RunTime Header Files
 #include <stdlib.h>
 #include <malloc.h>
@@ -16,6 +15,8 @@
 #include <d3d12.h>
 #include <atlbase.h>
 #include "d3dx12.h"
+#include <stdint.h>
+#include <d3d11_1.h>
 #include <DirectXMath.h>
 #include "DXSampleHelper.h"
 #include <wrl.h>
@@ -34,11 +35,11 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
-//#include "DDSTextureLoader.h"
+#include <windows.h>
+#include "DDSTextureLoader.h"
 #include "MathHelper.h"
 #include "Macro.h"
 using namespace DirectX;
 using namespace Microsoft::WRL;
 using namespace std;
-using namespace DirectX;
 //#include "DeviceResources.h"

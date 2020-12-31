@@ -24,7 +24,7 @@ public:
 
 	// We cannot reset the allocator until the GPU is done processing the commands.
 	// So each frame needs their own allocator.
-	//Microsoft::WRL::ComPtr<ID3D12CommandAllocator> CmdListAlloc;
+	//ComPtr<ID3D12CommandAllocator> CmdListAlloc;
 	ID3D12Resource* Resource()const
 	{
 		return CBuffer[CurrentSize]->Resource();
@@ -47,7 +47,7 @@ ConstantBuffer<T>::ConstantBuffer()
 {
 	for (int i = 0; i != MAX_CONSTENT_BUFFER_SIZE; ++i)
 	{
-		CBuffer.push_back(make_unique<UploadBuffer<T>>(GetEngine()->GetDevice().Get(), 1, true));
+		CBuffer.push_back(make_unique<UploadBuffer<T>>(GetEngine()->GetDevice(), 1, true));
 	}
 }
 

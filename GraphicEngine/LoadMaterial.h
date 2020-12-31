@@ -4,7 +4,7 @@
 class LoadMaterial
 {
 public:
-	void AddMaterial(string name, int CBIndex, DirectX::XMFLOAT4& diffuse, DirectX::XMFLOAT3& fresnel, float rough);
+	void AddMaterial(string name, int CBIndex, XMFLOAT4& diffuse, XMFLOAT3& fresnel, float rough);
 	void SetDiffuseSrv(const wchar_t* file);
 	void SetNormaSrv(const wchar_t* file);
 		// Unique material name for lookup.
@@ -26,10 +26,10 @@ public:
 		//int NumFramesDirty = gNumFrameResources;
 
 		// Material constant buffer data used for shading.
-		DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-		DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
+		XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+		XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
 		float Roughness = .25f;
-		DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
+		XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 
 private:
 	

@@ -116,8 +116,8 @@ void D3DApp::UpdateMaterialBuffer(const GameTimer& gt)
 
 void D3DApp::UpdateMainPassCB(const GameTimer& gt)
 {
-	XMMATRIX view = GetEngine()->mCamera.GetView();
-	XMMATRIX proj = GetEngine()->mCamera.GetProj();
+	XMMATRIX view = GetEngine()->GetCamera()->GetView();
+	XMMATRIX proj = GetEngine()->GetCamera()->GetProj();
 
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(view), view);
@@ -130,7 +130,7 @@ void D3DApp::UpdateMainPassCB(const GameTimer& gt)
 	XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
 	XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
-	mMainPassCB.EyePosW = GetEngine()->mCamera.GetPosition3f();
+	mMainPassCB.EyePosW = GetEngine()->GetCamera()->GetPosition3f();
 	mMainPassCB.RenderTargetSize = XMFLOAT2((float)GetEngine()->mClientWidth, (float)GetEngine()->mClientHeight);
 	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / GetEngine()->mClientWidth, 1.0f / GetEngine()->mClientHeight);
 	mMainPassCB.NearZ = 1.0f;
@@ -150,9 +150,9 @@ void D3DApp::UpdateMainPassCB(const GameTimer& gt)
 
 void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 {
-	ShaderState& shader = GetEngine()->GetShader();
-	ComPtr<ID3DBlob> vs = shader.CreateVSShader(vsFile);
-	ComPtr<ID3DBlob> ps = shader.CreatePSShader(psFile);
+	ShaderState* shader = GetEngine()->GetShader();
+	ComPtr<ID3DBlob> vs = shader->CreateVSShader(vsFile);
+	ComPtr<ID3DBlob> ps = shader->CreatePSShader(psFile);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
@@ -160,7 +160,7 @@ void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	// PSO for opaque objects.
 	//
 	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	opaquePsoDesc.InputLayout = { shader.GetLayout().data(), (UINT)shader.GetLayout().size() };
+	opaquePsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
 	opaquePsoDesc.pRootSignature = mBaseRootSignature.Get();
 	opaquePsoDesc.VS =
 	{
@@ -388,7 +388,7 @@ void D3DApp::Update(const GameTimer& gt)
 void D3DApp::Draw(const GameTimer& gt)
 {
 	ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->GetCurrentCommandAllocator();
-	auto mCommandList = GetEngine()->mCommandList;
+	auto mCommandList = GetEngine()->GetCommandList();
 
 	// Reuse the memory associated with command recording.
 	// We can only reset when the associated command lists have finished execution on the GPU.
@@ -398,8 +398,8 @@ void D3DApp::Draw(const GameTimer& gt)
 	// Reusing the command list reuses memory.
 	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mBasePSO.Get()));
 
-	mCommandList->RSSetViewports(1, &GetEngine()->mScreenViewport);
-	mCommandList->RSSetScissorRects(1, &GetEngine()->mScissorRect);
+	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
+	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
 
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
@@ -412,7 +412,7 @@ void D3DApp::Draw(const GameTimer& gt)
 	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = { GetEngine()->GetDescriptorHeap()->mSrvDescriptorHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { GetEngine()->GetSrvDescHeap() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	mCommandList->SetGraphicsRootSignature(mBaseRootSignature.Get());
@@ -438,9 +438,9 @@ void D3DApp::Draw(const GameTimer& gt)
 	// Bind all the textures used in this scene.  Observe
 	// that we only have to specify the first descriptor in the table.  
 	// The root signature knows how many descriptors are expected in the table.
-	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Opaque]);
+	DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::Opaque]);
 
 	// 	mCommandList->SetPipelineState(mPSOs["sky"].Get());
 	// 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Sky]);
@@ -453,12 +453,12 @@ void D3DApp::Draw(const GameTimer& gt)
 	ThrowIfFailed(mCommandList->Close());
 
 	// Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	GetEngine()->mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	ID3D12CommandList* cmdsLists[] = { mCommandList };
+	GetEngine()->GetCommandQueue()->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Swap the back and front buffers
-	ThrowIfFailed(GetEngine()->mSwapChain->Present(0, 0));
-	GetEngine()->mCurrBackBuffer = (GetEngine()->mCurrBackBuffer + 1) % SwapChainBufferCount;
+	ThrowIfFailed(GetEngine()->GetSwapChain()->Present(0, 0));
+	GetEngine()->SetCurrBackBufferIndex();
 
 	// Advance the fence value to mark commands up to this fence point.
 	mCurrFrameResource->SetFence(GetEngine()->IncreaseFence());
@@ -466,7 +466,7 @@ void D3DApp::Draw(const GameTimer& gt)
 	// Add an instruction to the command queue to set a new fence point. 
 	// Because we are on the GPU timeline, the new fence point won't be 
 	// set until the GPU finishes processing all the commands prior to this Signal().
-	GetEngine()->mCommandQueue->Signal(GetEngine()->GetFence(), GetEngine()->GetCurrentFence());
+	GetEngine()->GetCommandQueue()->Signal(GetEngine()->GetFence(), GetEngine()->GetCurrentFence());
 }
 
 void D3DApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<unique_ptr<RenderItem>>& ritems)

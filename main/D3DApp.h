@@ -26,8 +26,8 @@ public:
 
 	struct ObjectConstants
 	{
-		DirectX::XMFLOAT4X4 World = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 TexTransform = MathHelper::Identity4x4();
+		XMFLOAT4X4 World = MathHelper::Identity4x4();
+		XMFLOAT4X4 TexTransform = MathHelper::Identity4x4();
 		UINT     MaterialIndex;
 		UINT     ObjPad0;
 		UINT     ObjPad1;
@@ -36,22 +36,22 @@ public:
 //#define MaxLights 16
 	struct PassConstants
 	{
-		DirectX::XMFLOAT4X4 View = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 InvView = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 Proj = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 InvProj = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
-		DirectX::XMFLOAT4X4 InvViewProj = MathHelper::Identity4x4();
-		DirectX::XMFLOAT3 EyePosW = { 0.0f, 0.0f, 0.0f };
+		XMFLOAT4X4 View = MathHelper::Identity4x4();
+		XMFLOAT4X4 InvView = MathHelper::Identity4x4();
+		XMFLOAT4X4 Proj = MathHelper::Identity4x4();
+		XMFLOAT4X4 InvProj = MathHelper::Identity4x4();
+		XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
+		XMFLOAT4X4 InvViewProj = MathHelper::Identity4x4();
+		XMFLOAT3 EyePosW = { 0.0f, 0.0f, 0.0f };
 		float cbPerObjectPad1 = 0.0f;
-		DirectX::XMFLOAT2 RenderTargetSize = { 0.0f, 0.0f };
-		DirectX::XMFLOAT2 InvRenderTargetSize = { 0.0f, 0.0f };
+		XMFLOAT2 RenderTargetSize = { 0.0f, 0.0f };
+		XMFLOAT2 InvRenderTargetSize = { 0.0f, 0.0f };
 		float NearZ = 0.0f;
 		float FarZ = 0.0f;
 		float TotalTime = 0.0f;
 		float DeltaTime = 0.0f;
 
-		DirectX::XMFLOAT4 AmbientLight = { 0.0f, 0.0f, 0.0f, 1.0f };
+		XMFLOAT4 AmbientLight = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		// Indices [0, NUM_DIR_LIGHTS) are directional lights;
 		// indices [NUM_DIR_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHTS) are point lights;
@@ -62,12 +62,12 @@ public:
 
 	struct MaterialData
 	{
-		DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-		DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
+		XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
+		XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
 		float Roughness = 0.5f;
 
 		// Used in texture mapping.
-		DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
+		XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 
 		UINT DiffuseMapIndex = 0;
 		UINT NormalMapIndex = 0;
@@ -77,10 +77,10 @@ public:
 
 // 	struct Vertex
 // 	{
-// 		DirectX::XMFLOAT3 Pos;
-// 		DirectX::XMFLOAT3 Normal;
-// 		DirectX::XMFLOAT2 TexC;
-// 		DirectX::XMFLOAT3 TangentU;
+// 		XMFLOAT3 Pos;
+// 		XMFLOAT3 Normal;
+// 		XMFLOAT2 TexC;
+// 		XMFLOAT3 TangentU;
 // 	};
 
 	// Lightweight structure stores parameters to draw a shape.  This will

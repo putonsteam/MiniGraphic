@@ -6,8 +6,8 @@ int LoadTexture::Load(const wchar_t* file)
 {
 	Texture texMap;
 	texMap.Filename = file;
-	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(GetEngine()->GetDevice().Get(),
-		GetEngine()->GetCommandList().Get(), file,
+	ThrowIfFailed(CreateDDSTextureFromFile12(GetEngine()->GetDevice(),
+		GetEngine()->GetCommandList(), file,
 		texMap.Resource, texMap.UploadHeap));
 
 	texMap.DescriptorIndex = GetEngine()->GetDescriptorHeap()->DistributeTexDescriptor(texMap.Resource.Get());

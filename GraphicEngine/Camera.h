@@ -12,6 +12,7 @@
 #define CAMERA_H
 
 #include "d3dUtil.h"
+#include "framework.h"
 
 class Camera
 {
@@ -21,18 +22,18 @@ public:
 	~Camera();
 
 	// Get/Set world camera position.
-	DirectX::XMVECTOR GetPosition()const;
-	DirectX::XMFLOAT3 GetPosition3f()const;
+	XMVECTOR GetPosition()const;
+	XMFLOAT3 GetPosition3f()const;
 	void SetPosition(float x, float y, float z);
-	void SetPosition(const DirectX::XMFLOAT3& v);
+	void SetPosition(const XMFLOAT3& v);
 	
 	// Get camera basis vectors.
-	DirectX::XMVECTOR GetRight()const;
-	DirectX::XMFLOAT3 GetRight3f()const;
-	DirectX::XMVECTOR GetUp()const;
-	DirectX::XMFLOAT3 GetUp3f()const;
-	DirectX::XMVECTOR GetLook()const;
-	DirectX::XMFLOAT3 GetLook3f()const;
+	XMVECTOR GetRight()const;
+	XMFLOAT3 GetRight3f()const;
+	XMVECTOR GetUp()const;
+	XMFLOAT3 GetUp3f()const;
+	XMVECTOR GetLook()const;
+	XMFLOAT3 GetLook3f()const;
 
 	// Get frustum properties.
 	float GetNearZ()const;
@@ -51,15 +52,15 @@ public:
 	void SetLens(float fovY, float aspect, float zn, float zf);
 
 	// Define camera space via LookAt parameters.
-	void LookAt(DirectX::FXMVECTOR pos, DirectX::FXMVECTOR target, DirectX::FXMVECTOR worldUp);
-	void LookAt(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up);
+	void LookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp);
+	void LookAt(const XMFLOAT3& pos, const XMFLOAT3& target, const XMFLOAT3& up);
 
 	// Get View/Proj matrices.
-	DirectX::XMMATRIX GetView()const;
-	DirectX::XMMATRIX GetProj()const;
+	XMMATRIX GetView()const;
+	XMMATRIX GetProj()const;
 
-	DirectX::XMFLOAT4X4 GetView4x4f()const;
-	DirectX::XMFLOAT4X4 GetProj4x4f()const;
+	XMFLOAT4X4 GetView4x4f()const;
+	XMFLOAT4X4 GetProj4x4f()const;
 
 	// Strafe/Walk the camera a distance d.
 	void Strafe(float d);
@@ -75,10 +76,10 @@ public:
 private:
 
 	// Camera coordinate system with coordinates relative to world space.
-	DirectX::XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT3 mUp = { 0.0f, 1.0f, 0.0f };
-	DirectX::XMFLOAT3 mLook = { 0.0f, 0.0f, 1.0f };
+	XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 mRight = { 1.0f, 0.0f, 0.0f };
+	XMFLOAT3 mUp = { 0.0f, 1.0f, 0.0f };
+	XMFLOAT3 mLook = { 0.0f, 0.0f, 1.0f };
 
 	// Cache frustum properties.
 	float mNearZ = 0.0f;
@@ -91,8 +92,8 @@ private:
 	bool mViewDirty = true;
 
 	// Cache View/Proj matrices.
-	DirectX::XMFLOAT4X4 mView = MathHelper::Identity4x4();
-	DirectX::XMFLOAT4X4 mProj = MathHelper::Identity4x4();
+	XMFLOAT4X4 mView = MathHelper::Identity4x4();
+	XMFLOAT4X4 mProj = MathHelper::Identity4x4();
 };
 
 #endif // CAMERA_H
