@@ -1,7 +1,10 @@
 #pragma once
+#include "framework.h"
+#include "FrameResource.h"
+#include "LoadMaterial.h"
+#include "LoadTexture.h"
+#include "MeshInfo.h"
 
-// Lightweight structure stores parameters to draw a shape.  This will
-// vary from app-to-app.
 struct RenderItem
 {
 	RenderItem() = default;
@@ -23,8 +26,8 @@ struct RenderItem
 	// Index into GPU constant buffer corresponding to the ObjectCB for this render item.
 	UINT ObjCBIndex = -1;
 
-	Material* Mat = nullptr;
-	MeshGeometry* Geo = nullptr;
+	unique_ptr < LoadMaterial> Mat;
+	unique_ptr<MeshInfo> Geo;
 
 	// Primitive topology.
 	D3D12_PRIMITIVE_TOPOLOGY PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;

@@ -54,12 +54,6 @@
     <ClInclude Include="Tools\MathHelper.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicEngine\LoadTextMesh.h">
-      <Filter>GraphicEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="GraphicEngine\ResourceStruct.h">
-      <Filter>GraphicEngine</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicEngine\MeshInfo.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
@@ -87,13 +81,28 @@
     <ClInclude Include="GraphicEngine\ConstantBuffer.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicEngine\PipelineState.h">
-      <Filter>GraphicEngine</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicEngine\ShaderState.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicEngine\RootSignature.h">
+    <ClInclude Include="GraphicEngine\Camera.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\DescriptorHeap.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\GameTimer.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\d3dUtil.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\ResourceStruct.h">
+      <Filter>HeaderFiles</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\FrameResource.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\UploadBuffer.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -116,9 +125,6 @@
     <ClCompile Include="Tools\MathHelper.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicEngine\LoadTextMesh.cpp">
-      <Filter>GraphicEngine</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicEngine\MeshInfo.cpp">
       <Filter>GraphicEngine</Filter>
     </ClCompile>
@@ -134,17 +140,23 @@
     <ClCompile Include="GraphicEngine\LoadMaterial.cpp">
       <Filter>GraphicEngine</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicEngine\ConstantBuffer.cpp">
-      <Filter>GraphicEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="GraphicEngine\PipelineState.cpp">
-      <Filter>GraphicEngine</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicEngine\ShaderState.cpp">
       <Filter>GraphicEngine</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicEngine\RootSignature.cpp">
+    <ClCompile Include="GraphicEngine\Camera.cpp">
       <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\DescriptorHeap.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\GameTimer.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\FrameResource.cpp">
+      <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\d3dUtil.cpp">
+      <Filter>Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

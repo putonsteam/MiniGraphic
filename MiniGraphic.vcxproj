@@ -153,46 +153,50 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GraphicEngine\Camera.h" />
     <ClInclude Include="GraphicEngine\ConstantBuffer.h" />
     <ClInclude Include="GraphicEngine\DDSTextureLoader.h" />
+    <ClInclude Include="GraphicEngine\FrameResource.h" />
     <ClInclude Include="GraphicEngine\GraphicEngine.h" />
     <ClInclude Include="GraphicEngine\GraphicHeader.h" />
     <ClInclude Include="GraphicEngine\Lighting.h" />
-    <ClInclude Include="GraphicEngine\LoadTextMesh.h" />
     <ClInclude Include="GraphicEngine\LoadMaterial.h" />
     <ClInclude Include="GraphicEngine\MeshInfo.h" />
-    <ClInclude Include="GraphicEngine\PipelineState.h" />
     <ClInclude Include="GraphicEngine\RenderItem.h" />
-    <ClInclude Include="GraphicEngine\ResourceStruct.h" />
     <ClInclude Include="GraphicEngine\LoadTexture.h" />
-    <ClInclude Include="GraphicEngine\RootSignature.h" />
+    <ClInclude Include="GraphicEngine\DescriptorHeap.h" />
     <ClInclude Include="GraphicEngine\ShaderState.h" />
+    <ClInclude Include="GraphicEngine\UploadBuffer.h" />
     <ClInclude Include="HeaderFiles\framework.h" />
     <ClInclude Include="HeaderFiles\Macro.h" />
     <ClInclude Include="HeaderFiles\Resource.h" />
+    <ClInclude Include="HeaderFiles\ResourceStruct.h" />
     <ClInclude Include="HeaderFiles\targetver.h" />
     <ClInclude Include="main\D3DApp.h" />
     <ClInclude Include="main\D3DWindows.h" />
     <ClInclude Include="main\WindowsInput.h" />
+    <ClInclude Include="Tools\d3dUtil.h" />
     <ClInclude Include="Tools\d3dx12.h" />
+    <ClInclude Include="Tools\GameTimer.h" />
     <ClInclude Include="Tools\MathHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicEngine\ConstantBuffer.cpp" />
+    <ClCompile Include="GraphicEngine\Camera.cpp" />
     <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp" />
+    <ClCompile Include="GraphicEngine\FrameResource.cpp" />
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp" />
-    <ClCompile Include="GraphicEngine\LoadTextMesh.cpp" />
     <ClCompile Include="GraphicEngine\LoadMaterial.cpp" />
     <ClCompile Include="GraphicEngine\MeshInfo.cpp" />
-    <ClCompile Include="GraphicEngine\PipelineState.cpp" />
     <ClCompile Include="GraphicEngine\RenderItem.cpp" />
     <ClCompile Include="GraphicEngine\LoadTexture.cpp" />
-    <ClCompile Include="GraphicEngine\RootSignature.cpp" />
+    <ClCompile Include="GraphicEngine\DescriptorHeap.cpp" />
     <ClCompile Include="GraphicEngine\ShaderState.cpp" />
     <ClCompile Include="main\D3DApp.cpp" />
     <ClCompile Include="main\D3DWindows.cpp" />
     <ClCompile Include="main\main.cpp" />
     <ClCompile Include="main\WindowsInput.cpp" />
+    <ClCompile Include="Tools\d3dUtil.cpp" />
+    <ClCompile Include="Tools\GameTimer.cpp" />
     <ClCompile Include="Tools\MathHelper.cpp" />
   </ItemGroup>
   <ItemGroup>

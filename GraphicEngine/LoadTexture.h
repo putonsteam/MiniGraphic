@@ -5,7 +5,6 @@ class LoadTexture
 {
 public:
 	int Load(const wchar_t* file);
-	void BuildTextureDescriptorHeaps();
 
 	struct Texture
 	{
@@ -18,5 +17,5 @@ public:
 	};
 
 	vector<Texture> TextureList;
-	ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+
 };

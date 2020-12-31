@@ -11,7 +11,7 @@
             return m_pInstance;\
         }\
     private:\
-        static ClassName* m_pInstance;\
+        static ClassName* m_pInstance;
 
 #define IMPLEMENT_SINGLE(ClassName)\
     ClassName* ClassName::m_pInstance = nullptr;

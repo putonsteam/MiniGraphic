@@ -5,23 +5,8 @@ class LoadMaterial
 {
 public:
 	void AddMaterial(string name, int CBIndex, DirectX::XMFLOAT4& diffuse, DirectX::XMFLOAT3& fresnel, float rough);
-	void LoadTexture(string name, const wchar_t file);
-
-// 	struct MaterialConstants
-// 	{
-// 		DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
-// 		DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
-// 		float Roughness = 0.25f;
-// 
-// 		// Used in texture mapping.
-// 		DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
-// 	};
-
-	// Simple struct to represent a material for our demos.  A production 3D engine
-	// would likely create a class hierarchy of Materials.
-
-		struct Material
-	{
+	void SetDiffuseSrv(const wchar_t* file);
+	void SetNormaSrv(const wchar_t* file);
 		// Unique material name for lookup.
 		std::string Name;
 
@@ -45,10 +30,7 @@ public:
 		DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
 		float Roughness = .25f;
 		DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
-		int TexIndex;
-	}
 
 private:
-	std::unordered_map<std::string, std::unique_ptr<Material>> mMaterials;
-	LoadTexture TextureList;
+	
 };

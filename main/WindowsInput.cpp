@@ -1,4 +1,6 @@
 #include "WindowsInput.h"
+#include <WindowsX.h>
+#include "GraphicEngine.h"
 
 WindowsInput* WindowsInput::m_pInstance = nullptr;
 
@@ -45,6 +47,15 @@ LRESULT CALLBACK WindowsInput::WndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		EndPaint(hWnd, &ps);
 	}
 	break;
+	case WM_RBUTTONUP:
+		GetEngine()->OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
+	case WM_MOUSEMOVE:
+		GetEngine()->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
+	case WM_RBUTTONDOWN:
+		//OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;

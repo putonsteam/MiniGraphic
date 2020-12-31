@@ -1,4 +1,5 @@
 #include "ShaderState.h"
+#include "GraphicEngine.h"
 
 ShaderState::ShaderState()
 {
@@ -7,18 +8,19 @@ ShaderState::ShaderState()
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 }
 
 ComPtr<ID3DBlob> ShaderState::CreateVSShader(const wchar_t* file)
 {
-	return /*mShaders[name] = */CompileShader(file, nullptr, "VS", "vs_5_1");
+	mShaders["test1"] = CompileShader(file, nullptr, "VS", "vs_5_1");
+	return mShaders["test1"];
 }
 
 ComPtr<ID3DBlob> ShaderState::CreatePSShader(const wchar_t* file)
 {
-	return /*mShaders[name] = */CompileShader(file, nullptr, "PS", "ps_5_1");
+	mShaders["test2"] = CompileShader(file, nullptr, "PS", "ps_5_1");
+	return mShaders["test2"];
 }
 
 ComPtr<ID3DBlob> ShaderState::CompileShader(

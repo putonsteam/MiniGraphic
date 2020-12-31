@@ -14,6 +14,8 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 	InitSwapchainAndRvt();
 	InitDsv();
 	InitViewportAndScissor();
+	mFrameResource = new FrameResource();
+	mFrameResource->Init();
 	return true;
 }
 
@@ -43,6 +45,142 @@ bool GraphicEngine::InitDevice()
 	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), m_D3DMinFeatureLevel, IID_PPV_ARGS(&m_D3DDevice)));
 
 	return true;
+}
+
+void GraphicEngine::SetPosition(float x, float y, float z)
+{
+	mCamera.SetPosition(x, y, z);
+}
+
+void GraphicEngine::SetPosition(const XMFLOAT3& v)
+{
+	mCamera.SetPosition(v);
+
+}
+
+XMVECTOR GraphicEngine::GetPosition()const
+{
+	return mCamera.GetPosition();
+}
+
+XMFLOAT3 GraphicEngine::GetPosition3f()const
+{
+	return mCamera.GetPosition3f();
+}
+
+
+XMMATRIX GraphicEngine::GetView()const
+{
+	return mCamera.GetView();
+}
+
+XMMATRIX GraphicEngine::GetProj()const
+{
+	return mCamera.GetProj();
+}
+
+void GraphicEngine::OnMouseUp(WPARAM btnState, int x, int y)
+{
+	ReleaseCapture();
+}
+
+void GraphicEngine::OnMouseMove(WPARAM btnState, int x, int y)
+{
+	if ((btnState & MK_LBUTTON) != 0)
+	{
+		// Make each pixel correspond to a quarter of a degree.
+		float dx = XMConvertToRadians(0.25f*static_cast<float>(x - mLastMousePos.x));
+		float dy = XMConvertToRadians(0.25f*static_cast<float>(y - mLastMousePos.y));
+
+		mCamera.Pitch(dy);
+		mCamera.RotateY(dx);
+	}
+
+	mLastMousePos.x = x;
+	mLastMousePos.y = y;
+
+}
+
+GraphicEngine::GraphicEngine()
+{ 
+
+}
+
+void GraphicEngine::OnKeyboardInput(const GameTimer& gt)
+{
+	const float dt = gt.DeltaTime();
+
+	if (GetAsyncKeyState('W') & 0x8000)
+		mCamera.Walk(10.0f*dt);
+
+	if (GetAsyncKeyState('S') & 0x8000)
+		mCamera.Walk(-10.0f*dt);
+
+	if (GetAsyncKeyState('A') & 0x8000)
+		mCamera.Strafe(-10.0f*dt);
+
+	if (GetAsyncKeyState('D') & 0x8000)
+		mCamera.Strafe(10.0f*dt);
+
+	mCamera.UpdateViewMatrix();
+}
+
+void GraphicEngine::SendCommandAndFulsh()
+{
+	// Execute the initialization commands.
+	ThrowIfFailed(mCommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// Wait until initialization is complete.
+	Flush();
+}
+
+void GraphicEngine::Flush()
+{
+	// Advance the fence value to mark commands up to this fence point.
+	m_CurrentFence++;
+
+	// Add an instruction to the command queue to set a new fence point.  Because we 
+	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
+	// processing all the commands prior to this Signal().
+	ThrowIfFailed(mCommandQueue->Signal(m_Fence.Get(), m_CurrentFence));
+
+	// Wait until the GPU has completed commands up to this fence point.
+	if (m_Fence->GetCompletedValue() < m_CurrentFence)
+	{
+		HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+
+		// Fire event when GPU hits current fence.  
+		ThrowIfFailed(m_Fence->SetEventOnCompletion(m_CurrentFence, eventHandle));
+
+		// Wait until the GPU hits current fence event is fired.
+		WaitForSingleObject(eventHandle, INFINITE);
+		CloseHandle(eventHandle);
+	}
+}
+
+ID3D12Resource* GraphicEngine::CurrentBackBuffer()const
+{
+	return mSwapChainBuffer[mCurrBackBuffer].Get();
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::CurrentBackBufferView()const
+{
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+		mRtvHeap->GetCPUDescriptorHandleForHeapStart(),
+		mCurrBackBuffer,
+		mRtvDescriptorSize);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::DepthStencilView()const
+{
+	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
+}
+
+void GraphicEngine::InitDescriptorHeap(int size)
+{
+	mDescriptorHeap = new DescriptorHeap(size);
 }
 
 void GraphicEngine::InitGPUCommand()
@@ -171,11 +309,6 @@ void GraphicEngine::InitDsv()
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-	// Execute the resize commands.
-	ThrowIfFailed(mCommandList->Close());
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
 	// Wait until resize is complete.
 	Flush();
 }
@@ -191,30 +324,6 @@ void GraphicEngine::InitViewportAndScissor()
 	mScreenViewport.MaxDepth = 1.0f;
 
 	mScissorRect = { 0, 0, mClientWidth, mClientHeight };
-}
-
-void GraphicEngine::Flush()
-{
-	// Advance the fence value to mark commands up to this fence point.
-	m_CurrentFence++;
-
-	// Add an instruction to the command queue to set a new fence point.  Because we 
-	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
-	// processing all the commands prior to this Signal().
-	ThrowIfFailed(mCommandQueue->Signal(m_Fence.Get(), m_CurrentFence));
-
-	// Wait until the GPU has completed commands up to this fence point.
-	if (m_Fence->GetCompletedValue() < m_CurrentFence)
-	{
-		HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
-
-		// Fire event when GPU hits current fence.  
-		ThrowIfFailed(m_Fence->SetEventOnCompletion(m_CurrentFence, eventHandle));
-
-		// Wait until the GPU hits current fence event is fired.
-		WaitForSingleObject(eventHandle, INFINITE);
-		CloseHandle(eventHandle);
-	}
 }
 
 void GraphicEngine::Run()
@@ -272,32 +381,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
 
 	return defaultBuffer;
 }
-
-// ComPtr<ID3DBlob> GraphicEngine::CompileShader(
-// 	const std::wstring& filename,
-// 	const D3D_SHADER_MACRO* defines,
-// 	const std::string& entrypoint,
-// 	const std::string& target)
-// {
-// 	UINT compileFlags = 0;
-// #if defined(DEBUG) || defined(_DEBUG)  
-// 	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-// #endif
-// 
-// 	HRESULT hr = S_OK;
-// 
-// 	ComPtr<ID3DBlob> byteCode = nullptr;
-// 	ComPtr<ID3DBlob> errors;
-// 	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
-// 		entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
-// 
-// 	if (errors != nullptr)
-// 		OutputDebugStringA((char*)errors->GetBufferPointer());
-// 
-// 	ThrowIfFailed(hr);
-// 
-// 	return byteCode;
-// }
 
 GraphicEngine* GetEngine()
 {

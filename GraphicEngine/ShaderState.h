@@ -5,8 +5,8 @@ class ShaderState
 {
 public:
 	ShaderState();
-	ComPtr<ID3DBlob> CreateVSShader(string name, const wchar_t* file);
-	ComPtr<ID3DBlob> CreatePSShader(string name, const wchar_t* file);
+	ComPtr<ID3DBlob> CreateVSShader(const wchar_t* file);
+	ComPtr<ID3DBlob> CreatePSShader(const wchar_t* file);
 	ComPtr<ID3DBlob> CompileShader(const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
