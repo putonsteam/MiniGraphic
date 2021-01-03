@@ -26,20 +26,27 @@ bool D3DWindows::InitWindows(HINSTANCE hInstance, int nCmdShow, int width, int h
 	hInst = hInstance; // Store instance handle in our global variable
 
     // Initialize global strings
-    LoadStringW(hInst, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInst, IDC_MINIGRAPHIC, szWindowClass, MAX_LOADSTRING);
+    //LoadStringW(hInst, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    //LoadStringW(hInst, IDC_MINIGRAPHIC, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass();
 
+	// Compute window rectangle dimensions based on requested client area dimensions.
+	RECT R = { 0, 0, width, height };
+	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+	width = R.right - R.left;
+	height = R.bottom - R.top;
 
-	hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, width, height, nullptr, nullptr, hInst, nullptr);
+	std::wstring mMainWndCaption = L"d3d App";
 
+	hWnd = CreateWindow(L"MainWnd", mMainWndCaption.c_str(),
+		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, 0, hInst, 0);
 	if (!hWnd)
 	{
-		return FALSE;
+		MessageBox(0, L"CreateWindow Failed.", 0, 0);
+		return false;
 	}
 
-	ShowWindow(hWnd, nCmdShow);
+	ShowWindow(hWnd, SW_SHOW);
 	UpdateWindow(hWnd);
 
 	return TRUE;
@@ -52,21 +59,17 @@ bool D3DWindows::InitWindows(HINSTANCE hInstance, int nCmdShow, int width, int h
 //
 ATOM D3DWindows::MyRegisterClass()
 {
-    WNDCLASSEXW wcex;
+	WNDCLASS wc;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = hInst;
+	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = L"MainWnd";
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInst;
-    wcex.hIcon          = LoadIcon(hInst, MAKEINTRESOURCE(IDI_MINIGRAPHIC));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MINIGRAPHIC);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
+	return RegisterClass(&wc);
 }

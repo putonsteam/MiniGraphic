@@ -11,7 +11,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "d3dUtil.h"
+#include "Util.h"
 #include "framework.h"
 
 class Camera

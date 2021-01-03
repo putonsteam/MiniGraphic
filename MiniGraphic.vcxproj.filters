@@ -93,16 +93,19 @@
     <ClInclude Include="Tools\GameTimer.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="Tools\d3dUtil.h">
-      <Filter>Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="HeaderFiles\ResourceStruct.h">
-      <Filter>HeaderFiles</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicEngine\FrameResource.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
     <ClInclude Include="GraphicEngine\UploadBuffer.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\Util.h">
+      <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="HeaderFiles\ResourceStruct.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicEngine\GeometryGenerator.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -155,8 +158,11 @@
     <ClCompile Include="GraphicEngine\FrameResource.cpp">
       <Filter>GraphicEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Tools\d3dUtil.cpp">
+    <ClCompile Include="Tools\Util.cpp">
       <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\GeometryGenerator.cpp">
+      <Filter>GraphicEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

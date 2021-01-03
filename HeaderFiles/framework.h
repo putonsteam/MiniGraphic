@@ -42,4 +42,6 @@
 using namespace DirectX;
 using namespace Microsoft::WRL;
 using namespace std;
+using uint16 = std::uint16_t;
+using uint32 = std::uint32_t;
 //#include "DeviceResources.h"

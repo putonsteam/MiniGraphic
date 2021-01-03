@@ -84,5 +84,3 @@ cbuffer cbPass : register(b1)
     // are spot lights for a maximum of MaxLights per object.
     Light gLights[MaxLights];
 };
-
-

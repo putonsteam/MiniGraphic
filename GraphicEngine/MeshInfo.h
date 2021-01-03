@@ -7,6 +7,7 @@ class MeshInfo
 public:
 
 	void LoadTextMesh(const char* file);
+	void CreateSphere(float radius, uint32 sliceCount, uint32 stackCount);
 
 	// Give it a name so we can look it up by name.
 	std::string Name;

@@ -11,7 +11,7 @@ int LoadTexture::Load(const wchar_t* file)
 		texMap.Resource, texMap.UploadHeap));
 
 	texMap.DescriptorIndex = GetEngine()->GetDescriptorHeap()->DistributeTexDescriptor(texMap.Resource.Get());
-	TextureList.push_back(texMap);
+	TextureList.push_back(move(texMap));
 
 	return texMap.DescriptorIndex;
 }

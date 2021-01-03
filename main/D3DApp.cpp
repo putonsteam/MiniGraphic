@@ -17,7 +17,6 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 
 	LoadRenderItem();
 	GetEngine()->SendCommandAndFulsh();
-	mTimer.Reset();
 	return true;
 }
 
@@ -35,30 +34,59 @@ void D3DApp::LoadRenderItem()
 	auto skullMat = std::make_unique<LoadMaterial>();
 	skullMat->Name = "skullMat";
 	skullMat->MatCBIndex = 0;
+	skullMat->DiffuseAlbedo = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	skullMat->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
+	skullMat->Roughness = 0.2f;
 	//skullMat->DiffuseSrvHeapIndex = 4;
 	//skullMat->NormalSrvHeapIndex = 5;
-	skullMat->DiffuseAlbedo = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-	skullMat->FresnelR0 = XMFLOAT3(0.6f, 0.6f, 0.6f);
-	skullMat->Roughness = 0.2f;
 	skullMat->SetDiffuseSrv(L"source/Textures/white1x1.dds");
 	//skullMat->SetNormaSrv(L"source/Textures/default_nmap.dds");
 	skullRitem->Mat = move(skullMat);
 
 	XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.4f, 0.4f, 0.4f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
 	skullRitem->TexTransform = MathHelper::Identity4x4();
-	skullRitem->ObjCBIndex = 3;
+	skullRitem->ObjCBIndex = 0;
 	skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 //	skullRitem->StartIndexLocation = skull->StartIndexLocation;
 // 	skullRitem->BaseVertexLocation = skull->BaseVertexLocation;
 
 	mRitemLayer[(int)RenderLayer::Opaque].push_back(move(skullRitem));
 
+	auto sky = std::make_unique<LoadMaterial>();
+	sky->Name = "sky";
+	sky->MatCBIndex = 0;
+	sky->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	sky->FresnelR0 = XMFLOAT3(0.1f, 0.1f, 0.1f);
+	sky->Roughness = 1.0f;
+	sky->SetDiffuseSrv(L"source/Textures/grasscube1024.dds");
+// 
+// 	//GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);
+// 
+ 	auto sphere = std::make_unique<MeshInfo>();
+// 
+	sphere->CreateSphere(0.5f, 20, 20);
+// 	//skullRitem->Geo = move(sky);
+// 
+ 	auto skyRitem = std::make_unique<RenderItem>();
+ 	skyRitem->IndexCount = sphere->IndexCount;
+// 
+	XMStoreFloat4x4(&skyRitem->World, XMMatrixScaling(5000.0f, 5000.0f, 5000.0f));
+	skyRitem->TexTransform = MathHelper::Identity4x4();
+	skyRitem->ObjCBIndex = 0;
+	skyRitem->Mat = move(sky);
+ 	skyRitem->Geo = move(sphere);
+ 	skyRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	//skyRitem->StartIndexLocation = skyRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
+	//skyRitem->BaseVertexLocation = skyRitem->Geo->DrawArgs["sphere"].BaseVertexLocation;
+	mRitemLayer[(int)RenderLayer::Sky].push_back(move(skyRitem));
+
 	BuildBaseRootSignature();
 
 	BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
+	BuildSkyPSO(L"Shader\\Sky.hlsl", L"Shader\\Sky.hlsl");
 }
 
-void D3DApp::UpdateObjectCBs(const GameTimer& gt)
+void D3DApp::UpdateObjectCBs(const GameTimer& Timer)
 {
 	//for (int i = 0; i <= (int)RenderLayer::Count; ++i)
 	{
@@ -86,7 +114,7 @@ void D3DApp::UpdateObjectCBs(const GameTimer& gt)
 	}
 }
 
-void D3DApp::UpdateMaterialBuffer(const GameTimer& gt)
+void D3DApp::UpdateMaterialBuffer(const GameTimer& Timer)
 {
 	//auto e = *mRitemLayer[(int)RenderLayer::Opaque][1]->Mat;
 	//for (auto& e : mMaterials)
@@ -114,7 +142,7 @@ void D3DApp::UpdateMaterialBuffer(const GameTimer& gt)
 	}
 }
 
-void D3DApp::UpdateMainPassCB(const GameTimer& gt)
+void D3DApp::UpdateMainPassCB(const GameTimer& Timer)
 {
 	XMMATRIX view = GetEngine()->GetCamera()->GetView();
 	XMMATRIX proj = GetEngine()->GetCamera()->GetProj();
@@ -135,8 +163,8 @@ void D3DApp::UpdateMainPassCB(const GameTimer& gt)
 	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / GetEngine()->mClientWidth, 1.0f / GetEngine()->mClientHeight);
 	mMainPassCB.NearZ = 1.0f;
 	mMainPassCB.FarZ = 1000.0f;
-	mMainPassCB.TotalTime = gt.TotalTime();
-	mMainPassCB.DeltaTime = gt.DeltaTime();
+	mMainPassCB.TotalTime = Timer.TotalTime();
+	mMainPassCB.DeltaTime = Timer.DeltaTime();
 	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
 	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
 	mMainPassCB.Lights[0].Strength = { 0.6f, 0.6f, 0.6f };
@@ -185,6 +213,56 @@ void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mBasePSO)));
 }
 
+void D3DApp::BuildSkyPSO(const wchar_t* vsFile, const wchar_t* psFile)
+{
+	//
+		// PSO for sky.
+		//
+	ShaderState* shader = GetEngine()->GetShader();
+	ComPtr<ID3DBlob> vs = shader->CreateVSShader(vsFile);
+	ComPtr<ID3DBlob> ps = shader->CreatePSShader(psFile);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyPsoDesc;
+
+	//
+	// PSO for opaque objects.
+	//
+	ZeroMemory(&skyPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	skyPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
+	skyPsoDesc.pRootSignature = mBaseRootSignature.Get();
+	skyPsoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),
+		vs->GetBufferSize()
+	};
+	skyPsoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(ps->GetBufferPointer()),
+		ps->GetBufferSize()
+	};
+	skyPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	skyPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	skyPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	skyPsoDesc.SampleMask = UINT_MAX;
+	skyPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	skyPsoDesc.NumRenderTargets = 1;
+	skyPsoDesc.RTVFormats[0] = GetEngine()->mBackBufferFormat;
+	skyPsoDesc.SampleDesc.Count = /*m4xMsaaState ? 4 : */1;
+	skyPsoDesc.SampleDesc.Quality = /*m4xMsaaState ? (m4xMsaaQuality - 1) : */0;
+	skyPsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
+	//D3D12_GRAPHICS_PIPELINE_STATE_DESC skyPsoDesc = opaquePsoDesc;
+
+	// The camera is inside the sky sphere, so just turn off culling.
+	skyPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+	// Make sure the depth function is LESS_EQUAL and not just LESS.  
+	// Otherwise, the normalized depth values at z = 1 (NDC) will 
+	// fail the depth test if the depth buffer was cleared to 1.
+	skyPsoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&skyPsoDesc, IID_PPV_ARGS(&mSkyPSO)));
+
+}
 
 void D3DApp::BuildBaseRootSignature()
 {
@@ -231,7 +309,7 @@ void D3DApp::BuildBaseRootSignature()
 		IID_PPV_ARGS(mBaseRootSignature.GetAddressOf())));
 }
 
-std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> D3DApp::GetStaticSamplers()
+array<const CD3DX12_STATIC_SAMPLER_DESC, 6> D3DApp::GetStaticSamplers()
 {
 	// Applications usually only need a handful of samplers.  So just define them all up front
 	// and keep them available as part of the root signature.  
@@ -282,75 +360,24 @@ std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> D3DApp::GetStaticSamplers()
 		0.0f,                              // mipLODBias
 		8);                                // maxAnisotropy
 
-	const CD3DX12_STATIC_SAMPLER_DESC shadow(
-		6, // shaderRegister
-		D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_BORDER,  // addressW
-		0.0f,                               // mipLODBias
-		16,                                 // maxAnisotropy
-		D3D12_COMPARISON_FUNC_LESS_EQUAL,
-		D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK);
-
 	return {
 		pointWrap, pointClamp,
 		linearWrap, linearClamp,
-		anisotropicWrap, anisotropicClamp,
-		shadow
-	};
+		anisotropicWrap, anisotropicClamp };
 }
-
-void D3DApp::CalculateFrameStats()
-{
-	// Code computes the average frames per second, and also the 
-	// average time it takes to render one frame.  These stats 
-	// are appended to the window caption bar.
-
-	static int frameCnt = 0;
-	static float timeElapsed = 0.0f;
-
-	frameCnt++;
-
-	// Compute averages over one second period.
-	if ((mTimer.TotalTime() - timeElapsed) >= 1.0f)
-	{
-		float fps = (float)frameCnt; // fps = frameCnt / 1
-		float mspf = 1000.0f / fps;
-
-		wstring fpsStr = to_wstring(fps);
-		wstring mspfStr = to_wstring(mspf);
-
-		//wstring windowText = mMainWndCaption +
-			L"    fps: " + fpsStr +
-			L"   mspf: " + mspfStr;
-
-		//SetWindowText(mhMainWnd, windowText.c_str());
-
-		// Reset for next average.
-		frameCnt = 0;
-		timeElapsed += 1.0f;
-	}
-}
-
 
 void D3DApp::Run()
 {
-	mTimer.Tick();
-	CalculateFrameStats();
- 	Update(mTimer);
- 	Draw(mTimer);
+	GetEngine()->Run();
+ 	Update(GetEngine()->GetTimer());
+ 	Draw(GetEngine()->GetTimer());
 }
 
-void D3DApp::Update(const GameTimer& gt)
+void D3DApp::Update(const GameTimer& Timer)
 {
-	GetEngine()->OnKeyboardInput(gt);
-
 	// Cycle through the circular frame resource array.
 	mCurrFrameResource = GetEngine()->GetFrameResource();
 	mCurrFrameResource->Update();
-	
-	
 
 	// Has the GPU finished processing the commands of the current frame resource?
 	// If not, wait until the GPU has completed commands up to this fence point.
@@ -366,7 +393,7 @@ void D3DApp::Update(const GameTimer& gt)
 	// Animate the lights (and hence shadows).
 	//
 
-	mLightRotationAngle += 0.1f*gt.DeltaTime();
+	mLightRotationAngle += 0.1f*Timer.DeltaTime();
 
 	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
 	for (int i = 0; i < 3; ++i)
@@ -376,16 +403,16 @@ void D3DApp::Update(const GameTimer& gt)
 		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
 	}
 
-	//AnimateMaterials(gt);
-	UpdateObjectCBs(gt);
-	UpdateMaterialBuffer(gt);
-	//UpdateShadowTransform(gt);
-	UpdateMainPassCB(gt);
-	//UpdateShadowPassCB(gt);
-	//UpdateSsaoCB(gt);
+	//AnimateMaterials(Timer);
+	UpdateObjectCBs(Timer);
+	UpdateMaterialBuffer(Timer);
+	//UpdateShadowTransform(Timer);
+	UpdateMainPassCB(Timer);
+	//UpdateShadowPassCB(Timer);
+	//UpdateSsaoCB(Timer);
 }
 
-void D3DApp::Draw(const GameTimer& gt)
+void D3DApp::Draw(const GameTimer& Timer)
 {
 	ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->GetCurrentCommandAllocator();
 	auto mCommandList = GetEngine()->GetCommandList();
@@ -442,8 +469,8 @@ void D3DApp::Draw(const GameTimer& gt)
 
 	DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::Opaque]);
 
-	// 	mCommandList->SetPipelineState(mPSOs["sky"].Get());
-	// 	DrawRenderItems(mCommandList.Get(), mRitemLayer[(int)RenderLayer::Sky]);
+	//mCommandList->SetPipelineState(mSkyPSO.Get());
+	//DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::Sky]);
 
 		// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),

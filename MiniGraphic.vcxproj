@@ -92,6 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +158,7 @@
     <ClInclude Include="GraphicEngine\ConstantBuffer.h" />
     <ClInclude Include="GraphicEngine\DDSTextureLoader.h" />
     <ClInclude Include="GraphicEngine\FrameResource.h" />
+    <ClInclude Include="GraphicEngine\GeometryGenerator.h" />
     <ClInclude Include="GraphicEngine\GraphicEngine.h" />
     <ClInclude Include="GraphicEngine\GraphicHeader.h" />
     <ClInclude Include="GraphicEngine\Lighting.h" />
@@ -175,7 +177,7 @@
     <ClInclude Include="main\D3DApp.h" />
     <ClInclude Include="main\D3DWindows.h" />
     <ClInclude Include="main\WindowsInput.h" />
-    <ClInclude Include="Tools\d3dUtil.h" />
+    <ClInclude Include="Tools\Util.h" />
     <ClInclude Include="Tools\d3dx12.h" />
     <ClInclude Include="Tools\GameTimer.h" />
     <ClInclude Include="Tools\MathHelper.h" />
@@ -184,6 +186,7 @@
     <ClCompile Include="GraphicEngine\Camera.cpp" />
     <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp" />
     <ClCompile Include="GraphicEngine\FrameResource.cpp" />
+    <ClCompile Include="GraphicEngine\GeometryGenerator.cpp" />
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp" />
     <ClCompile Include="GraphicEngine\LoadMaterial.cpp" />
     <ClCompile Include="GraphicEngine\MeshInfo.cpp" />
@@ -195,7 +198,7 @@
     <ClCompile Include="main\D3DWindows.cpp" />
     <ClCompile Include="main\main.cpp" />
     <ClCompile Include="main\WindowsInput.cpp" />
-    <ClCompile Include="Tools\d3dUtil.cpp" />
+    <ClCompile Include="Tools\Util.cpp" />
     <ClCompile Include="Tools\GameTimer.cpp" />
     <ClCompile Include="Tools\MathHelper.cpp" />
   </ItemGroup>

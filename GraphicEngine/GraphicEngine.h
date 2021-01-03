@@ -23,6 +23,7 @@ public:
 	bool Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level);
 	void InitDescriptorHeap(int size);
 	void Run();
+	void Update();
 	void Flush();
 
 	//camera
@@ -37,7 +38,7 @@ public:
 	//void OnMouseDown(WPARAM btnState, int x, int y);
 	void OnMouseUp(WPARAM btnState, int x, int y);
 	void OnMouseMove(WPARAM btnState, int x, int y);
-	void OnKeyboardInput(const GameTimer& gt);
+	void OnKeyboardInput();
 
 	ComPtr<ID3D12Resource> CreateDefaultBuffer(
 		const void* initData,
@@ -59,6 +60,7 @@ public:
 	ID3D12DescriptorHeap* GetSrvDescHeap() { return GetDescriptorHeap()->GetSrvDescHeap(); }
 	ID3D12Fence* GetFence() { return m_Fence.Get(); }
 	UINT64 GetCurrentFence() { return m_CurrentFence; }
+	GameTimer& GetTimer() { return mTimer; }
 
 	UINT64 IncreaseFence() { return ++m_CurrentFence; }
 	void SendCommandAndFulsh();
@@ -87,7 +89,7 @@ private:
 	void InitSwapchainAndRvt();
 	void InitDsv();
 	void InitViewportAndScissor();
-
+	void CalculateFrameStats();
 
 	ComPtr<IDXGIFactory4>               m_DxgiFactory;
 	std::wstring                                        m_AdapterDescription;
@@ -120,6 +122,8 @@ private:
 	ShaderState mShader;
 	FrameResource* mFrameResource;
 	POINT mLastMousePos;
+	GameTimer mTimer;
+
 };
 
 extern GraphicEngine* GetEngine();

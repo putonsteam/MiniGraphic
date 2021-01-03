@@ -4,6 +4,7 @@ IMPLEMENT_SINGLE(GraphicEngine)
 
 bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level)
 {
+	mTimer.Reset();
 	mClientWidth = Width;
 	mClientHeight = Height;
 	mhMainWnd = wnd;
@@ -106,9 +107,9 @@ GraphicEngine::GraphicEngine()
 
 }
 
-void GraphicEngine::OnKeyboardInput(const GameTimer& gt)
+void GraphicEngine::OnKeyboardInput()
 {
-	const float dt = gt.DeltaTime();
+	const float dt = mTimer.DeltaTime();
 
 	if (GetAsyncKeyState('W') & 0x8000)
 		mCamera.Walk(10.0f*dt);
@@ -328,7 +329,46 @@ void GraphicEngine::InitViewportAndScissor()
 
 void GraphicEngine::Run()
 {
+	mTimer.Tick();
+	CalculateFrameStats();
+	Update();
+}
 
+void GraphicEngine::Update()
+{
+	OnKeyboardInput();
+}
+
+void GraphicEngine::CalculateFrameStats()
+{
+	// Code computes the average frames per second, and also the 
+	// average time it takes to render one frame.  These stats 
+	// are appended to the window caption bar.
+
+	static int frameCnt = 0;
+	static float timeElapsed = 0.0f;
+
+	frameCnt++;
+
+	// Compute averages over one second period.
+	if ((mTimer.TotalTime() - timeElapsed) >= 1.0f)
+	{
+		float fps = (float)frameCnt; // fps = frameCnt / 1
+		float mspf = 1000.0f / fps;
+
+		wstring fpsStr = to_wstring(fps);
+		wstring mspfStr = to_wstring(mspf);
+
+		//wstring windowText = mMainWndCaption +
+		L"    fps: " + fpsStr +
+			L"   mspf: " + mspfStr;
+
+		//SetWindowText(mhMainWnd, windowText.c_str());
+
+		// Reset for next average.
+		frameCnt = 0;
+		timeElapsed += 1.0f;
+	}
 }
 
 ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
