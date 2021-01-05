@@ -35,6 +35,7 @@ public:
 	// the Submeshes individually.
 	//std::unordered_map<std::string, SubmeshGeometry> DrawArgs;
 
+	// don't need to create descriptor heap
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView()const
 	{
 		D3D12_VERTEX_BUFFER_VIEW vbv;
