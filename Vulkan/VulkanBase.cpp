@@ -1,4 +1,5 @@
 #include "VulkanBase.h"
+#include "Util.h"
 
 // show debug info, contain error to debug
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
@@ -29,8 +30,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	}
 
 	message << "[" << pLayerPrefix << "] Code " << messageCode << " : " << pMessage;
-	OutputDebugString(message.str().c_str());
-	OutputDebugString("\n");
+	OutputDebugString(AnsiToWChar(message.str().c_str()));
+	OutputDebugString(L"\n");
 
 	assert((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) == 0);
 
@@ -715,10 +716,10 @@ bool CVulkanBase::InitializeDeviceLayerAndExt()
 
 	for (int i = 0; i < _count; ++i)
 	{
-		OutputDebugString(_vkLayerProperties[i].layerName);
-		OutputDebugString("     ");
-		OutputDebugString(_vkLayerProperties[i].description);
-		OutputDebugString("\n");
+		OutputDebugString(AnsiToWChar(_vkLayerProperties[i].layerName));
+		OutputDebugString(L"     ");
+		OutputDebugString(AnsiToWChar(_vkLayerProperties[i].description));
+		OutputDebugString(L"\n");
 		m_DeviceLayerNames.push_back(_strdup(_vkLayerProperties[i].layerName));
 	}
 
@@ -731,8 +732,8 @@ bool CVulkanBase::InitializeDeviceLayerAndExt()
 
 	for (auto i = 0u; i < _count; ++i)
 	{
-		OutputDebugString(_vkExtensionProperties[i].extensionName);
-		OutputDebugString("\n");
+		OutputDebugString(AnsiToWChar(_vkExtensionProperties[i].extensionName));
+		OutputDebugString(L"\n");
 		m_DeviceExtensionNames.push_back(_strdup(_vkExtensionProperties[i].extensionName));
 	}
 
@@ -795,10 +796,10 @@ bool CVulkanBase::InitializeInstanceLayerAndExt()
 	VK_RETURN_IF_FAILED(vkEnumerateInstanceLayerProperties(&_count, _vkLayerProperties.get()));
 	for (auto i = 0u; i < _count; ++i)
 	{
-		OutputDebugString(_vkLayerProperties[i].layerName);
-		OutputDebugString("     ");
-		OutputDebugString(_vkLayerProperties[i].description);
-		OutputDebugString("\n");
+		OutputDebugString(AnsiToWChar(_vkLayerProperties[i].layerName));
+		OutputDebugString(L"     ");
+		OutputDebugString(AnsiToWChar(_vkLayerProperties[i].description));
+		OutputDebugString(L"\n");
 		m_InstanceLayerNames.push_back(_strdup(_vkLayerProperties[i].layerName));
 	}
 	//enumerate extension
@@ -808,8 +809,8 @@ bool CVulkanBase::InitializeInstanceLayerAndExt()
 		nullptr, &_count, _vkExtensionProperties.get()));
 	for (auto i = 0u; i < _count; ++i)
 	{
-		OutputDebugString(_vkExtensionProperties[i].extensionName);
-		OutputDebugString("\n");
+		OutputDebugString(AnsiToWChar(_vkExtensionProperties[i].extensionName));
+		OutputDebugString(L"\n");
 		m_InstanceExtensionNames.push_back(_strdup(_vkExtensionProperties[i].extensionName));
 	}
 

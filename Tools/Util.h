@@ -32,6 +32,13 @@ inline void d3dSetDebugName(ID3D12DeviceChild* obj, const char* name)
     }
 }
 
+inline wchar_t* AnsiToWChar(const char* str)
+{
+	WCHAR buffer[512];
+	MultiByteToWideChar(CP_ACP, 0, str, -1, buffer, 512);
+	return buffer;
+}
+
 inline std::wstring AnsiToWString(const std::string& str)
 {
     WCHAR buffer[512];

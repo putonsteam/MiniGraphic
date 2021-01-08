@@ -25,6 +25,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Vulkan">
+      <UniqueIdentifier>{a87ae717-0c72-4e7f-b509-2b3ce61d2f3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulkan\Public">
+      <UniqueIdentifier>{2ba635e8-2f3a-40e7-9b5b-2a7376ab172b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphicEngine\GraphicEngine.h">
@@ -108,6 +114,18 @@
     <ClInclude Include="GraphicEngine\GeometryGenerator.h">
       <Filter>GraphicEngine</Filter>
     </ClInclude>
+    <ClInclude Include="Vulkan\Game.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\VulkanBase.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\VulkanHeader.h">
+      <Filter>Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Vulkan\Public\linmath.h">
+      <Filter>Vulkan\Public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
@@ -163,6 +181,12 @@
     </ClCompile>
     <ClCompile Include="GraphicEngine\GeometryGenerator.cpp">
       <Filter>GraphicEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\Game.cpp">
+      <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Vulkan\VulkanBase.cpp">
+      <Filter>Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -477,8 +477,8 @@ bool CGame::loadShader()
 
 	const char*			shaderName[2] =
 	{
-		"shader/cube-vert.spv",
-		"shader/cube-frag.spv",
+		"Shader/cube-vert.spv",
+		"Shader/cube-frag.spv",
 	};
 
 	for (auto i = 0; i < 2; ++i)
@@ -507,7 +507,7 @@ bool CGame::LoadTexture()
 {
 	std::string textureFile[] =
 	{
-		"texture/bricks.ppm",
+		"source/Textures/bricks.ppm",
 	};
 	VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 	VkFormatProperties	formatProperties;
