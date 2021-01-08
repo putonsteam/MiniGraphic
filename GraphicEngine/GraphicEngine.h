@@ -11,6 +11,7 @@
 #include "GameTimer.h"
 #include "Camera.h"
 #include "Macro.h"
+#include "ConstantBuffer.h"
 
 static const int SwapChainBufferCount = 2;
 
@@ -23,7 +24,7 @@ public:
 	bool Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level);
 	void InitDescriptorHeap(int size);
 	void Run();
-	void Update();
+	void Update(const GameTimer& Timer);
 	void Flush();
 
 	//camera
@@ -61,6 +62,7 @@ public:
 	ID3D12Fence* GetFence() { return m_Fence.Get(); }
 	UINT64 GetCurrentFence() { return m_CurrentFence; }
 	GameTimer& GetTimer() { return mTimer; }
+	ID3D12RootSignature* GetBaseRootSignature() { return mBaseRootSignature.Get(); }
 
 	UINT64 IncreaseFence() { return ++m_CurrentFence; }
 	void SendCommandAndFulsh();
@@ -72,6 +74,16 @@ public:
 	ID3D12Resource* CurrentBackBuffer()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView()const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()const;
+
+	void DrawRenderItems(RenderLayer layer/*ID3D12GraphicsCommandList* cmdList, *//*const std::vector<unique_ptr<RenderItem>>& ritems*/);
+	void UpdateObjectCBs(const GameTimer& Timer);
+	void UpdateMaterialBuffer(const GameTimer& Timer);
+	//void UpdateShadowTransform(const GameTimer& Timer);
+	void UpdateMainPassCB(const GameTimer& Timer);
+	void UpdateShaderParameter(const GameTimer& Timer);
+	void CreateShaderParameter();
+	void AddRenderItem(RenderLayer layer, make_unique<RenderItem>& item);
+	void BuildBaseRootSignature();
 
 	UINT mRtvDescriptorSize = 0;
 	UINT mDsvDescriptorSize = 0;
@@ -123,6 +135,13 @@ private:
 	FrameResource* mFrameResource;
 	POINT mLastMousePos;
 	GameTimer mTimer;
+
+	std::unique_ptr<ConstantBuffer<PassConstants>> PassCB = nullptr;
+	std::unique_ptr<ConstantBuffer<ObjectConstants>> ObjectCB = nullptr;
+	std::unique_ptr<ConstantBuffer<MaterialData>> MaterialBuffer = nullptr;
+	PassConstants mMainPassCB;  // index 0 of pass cbuffer.
+	std::vector<unique_ptr<RenderItem>> mRitemLayer[(int)RenderLayer::Count];
+	ComPtr<ID3D12RootSignature> mBaseRootSignature;
 
 };
 

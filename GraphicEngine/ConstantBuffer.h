@@ -15,7 +15,7 @@ class ConstantBuffer
 {
 public:
 
-	ConstantBuffer();
+	ConstantBuffer(UINT elementCount);
 	//     ConstantBuffer(const ConstantBuffer& rhs) = delete;
 	//     ConstantBuffer& operator=(const ConstantBuffer& rhs) = delete;
 	~ConstantBuffer();
@@ -43,11 +43,11 @@ private:
 };
 
 template<class T>
-ConstantBuffer<T>::ConstantBuffer()
+ConstantBuffer<T>::ConstantBuffer(UINT elementCount)
 {
 	for (int i = 0; i != MAX_CONSTENT_BUFFER_SIZE; ++i)
 	{
-		CBuffer.push_back(make_unique<UploadBuffer<T>>(GetEngine()->GetDevice(), 1, true));
+		CBuffer.push_back(make_unique<UploadBuffer<T>>(GetEngine()->GetDevice(), elementCount, true));
 	}
 }
 

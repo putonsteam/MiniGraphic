@@ -36,8 +36,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else
 		{
-			//app.Run();
-			CGame::GetInstance()->Run();
+			app.Run();
+			//CGame::GetInstance()->Run();
 		}
 	}
 

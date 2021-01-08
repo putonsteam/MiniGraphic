@@ -126,6 +126,9 @@
     <ClInclude Include="Vulkan\Public\linmath.h">
       <Filter>Vulkan\Public</Filter>
     </ClInclude>
+    <ClInclude Include="GraphicEngine\Sky.h">
+      <Filter>GraphicEngine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
@@ -187,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="Vulkan\VulkanBase.cpp">
       <Filter>Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicEngine\Sky.cpp">
+      <Filter>GraphicEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

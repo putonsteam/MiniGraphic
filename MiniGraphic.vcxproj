@@ -169,6 +169,7 @@
     <ClInclude Include="GraphicEngine\LoadTexture.h" />
     <ClInclude Include="GraphicEngine\DescriptorHeap.h" />
     <ClInclude Include="GraphicEngine\ShaderState.h" />
+    <ClInclude Include="GraphicEngine\Sky.h" />
     <ClInclude Include="GraphicEngine\UploadBuffer.h" />
     <ClInclude Include="HeaderFiles\framework.h" />
     <ClInclude Include="HeaderFiles\Macro.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="GraphicEngine\LoadTexture.cpp" />
     <ClCompile Include="GraphicEngine\DescriptorHeap.cpp" />
     <ClCompile Include="GraphicEngine\ShaderState.cpp" />
+    <ClCompile Include="GraphicEngine\Sky.cpp" />
     <ClCompile Include="main\D3DApp.cpp" />
     <ClCompile Include="main\D3DWindows.cpp" />
     <ClCompile Include="main\main.cpp" />

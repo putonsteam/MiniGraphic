@@ -331,12 +331,205 @@ void GraphicEngine::Run()
 {
 	mTimer.Tick();
 	CalculateFrameStats();
-	Update();
+	Update(mTimer);
 }
 
-void GraphicEngine::Update()
+void GraphicEngine::Update(const GameTimer& Timer)
 {
 	OnKeyboardInput();
+	UpdateShaderParameter(Timer)
+}
+
+void UpdateShaderParameter(const GameTimer& Timer)
+{
+	UpdateObjectCBs(Timer);
+	UpdateMaterialBuffer(Timer);
+	UpdateMainPassCB(Timer);
+}
+
+void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
+{
+	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	{
+		for (int j = 0; mRitemLayer[i].size(); ++j)
+		{
+			RenderItem* e = mRitemLayer[i][j].get();
+			// Only update the cbuffer data if the constants have changed.  
+			// This needs to be tracked per frame resource.
+			//if (e->NumFramesDirty > 0)
+			{
+				XMMATRIX world = XMLoadFloat4x4(&e->World);
+				XMMATRIX texTransform = XMLoadFloat4x4(&e->TexTransform);
+
+				ObjectConstants objConstants;
+				XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
+				XMStoreFloat4x4(&objConstants.TexTransform, XMMatrixTranspose(texTransform));
+				objConstants.MaterialIndex = e->Mat->MatCBIndex;
+
+				ObjectCB->Update(e->ObjCBIndex, objConstants);
+
+				// Next FrameResource need to be updated too.
+				e->NumFramesDirty--;
+			}
+		}
+	}
+}
+
+void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
+{
+	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	{
+		for (int j = 0; mRitemLayer[i].size(); ++j)
+		{
+			LoadMaterial* mat = mRitemLayer[(int)RenderLayer::Opaque][1]->Mat->get();
+			//for (auto& e : mMaterials)
+			//{
+				// Only update the cbuffer data if the constants have changed.  If the cbuffer
+				// data changes, it needs to be updated for each FrameResource.
+				//LoadMaterial* mat = mRitemLayer[(int)RenderLayer::Opaque][0]->Mat.get();
+				//if (mat->NumFramesDirty > 0)
+			{
+				XMMATRIX matTransform = XMLoadFloat4x4(&mat->MatTransform);
+
+				MaterialData matData;
+				matData.DiffuseAlbedo = mat->DiffuseAlbedo;
+				matData.FresnelR0 = mat->FresnelR0;
+				matData.Roughness = mat->Roughness;
+				XMStoreFloat4x4(&matData.MatTransform, XMMatrixTranspose(matTransform));
+				matData.DiffuseMapIndex = mat->DiffuseSrvHeapIndex;
+				//matData.NormalMapIndex = mat->NormalSrvHeapIndex;
+
+				MaterialBuffer->Update(mat->MatCBIndex, matData);
+
+				// Next FrameResource need to be updated too.
+				//mat->NumFramesDirty--;
+			}
+		}
+	}
+}
+
+void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
+{
+	XMMATRIX view = /*GetEngine()->*/GetCamera()->GetView();
+	XMMATRIX proj = /*GetEngine()->*/GetCamera()->GetProj();
+
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	XMMATRIX invProj = XMMatrixInverse(&XMMatrixDeterminant(proj), proj);
+	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
+
+	// 	XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
+	// 	XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
+	// 	XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
+	// 	XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
+	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
+	//XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
+	mMainPassCB.EyePosW = /*GetEngine()->*/GetCamera()->GetPosition3f();
+	// 	mMainPassCB.RenderTargetSize = XMFLOAT2((float)GetEngine()->mClientWidth, (float)GetEngine()->mClientHeight);
+	// 	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / GetEngine()->mClientWidth, 1.0f / GetEngine()->mClientHeight);
+	// 	mMainPassCB.NearZ = 1.0f;
+	// 	mMainPassCB.FarZ = 1000.0f;
+	// 	mMainPassCB.TotalTime = Timer.TotalTime();
+	// 	mMainPassCB.DeltaTime = Timer.DeltaTime();
+	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
+	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
+	mMainPassCB.Lights[0].Strength = { 0.6f, 0.6f, 0.6f };
+	mMainPassCB.Lights[1].Direction = { -0.57735f, -0.57735f, 0.57735f };
+	mMainPassCB.Lights[1].Strength = { 0.3f, 0.3f, 0.3f };
+	mMainPassCB.Lights[2].Direction = { 0.0f, -0.707f, -0.707f };
+	mMainPassCB.Lights[2].Strength = { 0.15f, 0.15f, 0.15f };
+
+	PassCB->Update(0, mMainPassCB);
+}
+
+void GraphicEngine::CreateShaderParameter()
+{
+	int count = 0;
+	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	{
+		for (int j = 0; mRitemLayer[i].size(); ++j)
+		{
+			count++;
+		}
+	}
+PassCB = make_unique<ConstantBuffer<PassConstants>>(1);
+ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(count);
+MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(count);
+}
+
+
+void GraphicEngine::BuildBaseRootSignature()
+{
+	CD3DX12_DESCRIPTOR_RANGE texTable0;
+	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE texTable1;
+	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 1, 0);
+
+	// Root parameter can be a table, root descriptor or root constants.
+	CD3DX12_ROOT_PARAMETER slotRootParameter[5];
+
+	// Perfomance TIP: Order from most frequent to least frequent.
+	slotRootParameter[0].InitAsConstantBufferView(0);
+	slotRootParameter[1].InitAsConstantBufferView(1);
+	slotRootParameter[2].InitAsShaderResourceView(0, 1);
+	slotRootParameter[3].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[4].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
+
+
+	auto staticSamplers = GetStaticSamplers();
+
+	// A root signature is an array of root parameters.
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(5, slotRootParameter,
+		(UINT)staticSamplers.size(), staticSamplers.data(),
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+	ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+
+	if (errorBlob != nullptr)
+	{
+		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+	ThrowIfFailed(hr);
+
+	ThrowIfFailed(GetEngine()->GetDevice()->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(mBaseRootSignature.GetAddressOf())));
+}
+
+
+void GraphicEngine::AddRenderItem(RenderLayer layer, make_unique<RenderItem>& item)
+{
+	mRitemLayer[(int)layer].push_back(move(item));
+}
+
+void GraphicEngine::DrawRenderItems(RenderLayer layer/*ID3D12GraphicsCommandList* cmdList, *//*const std::vector<unique_ptr<RenderItem>>& ritems*/)
+{
+	const vector<unique_ptr<RenderItem>>& ritems = mRitemLayer[(int)layer];
+	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+
+	// For each render item...
+	for (size_t i = 0; i < ritems.size(); ++i)
+	{
+		auto ri = ritems[i].get();
+
+		mCommandList->IASetVertexBuffers(0, 1, &ri->Geo->VertexBufferView());
+		mCommandList->IASetIndexBuffer(&ri->Geo->IndexBufferView());
+		mCommandList->IASetPrimitiveTopology(ri->PrimitiveType);
+
+		D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = ObjectCB->Resource()->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
+
+		mCommandList->SetGraphicsRootConstantBufferView(0, objCBAddress);
+
+		mCommandList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
+	}
 }
 
 void GraphicEngine::CalculateFrameStats()

@@ -5,6 +5,7 @@ class LoadTexture
 {
 public:
 	int Load(const wchar_t* file);
+	int LoadCure(const wchar_t* file);
 
 	struct Texture
 	{
