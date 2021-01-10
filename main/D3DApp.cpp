@@ -34,10 +34,7 @@ void D3DApp::LoadRenderItem()
 	skullMat->DiffuseAlbedo = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
 	skullMat->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
 	skullMat->Roughness = 0.2f;
-	//skullMat->DiffuseSrvHeapIndex = 4;
-	//skullMat->NormalSrvHeapIndex = 5;
 	skullMat->SetDiffuseSrv(L"source/Textures/white1x1.dds");
-	//skullMat->SetNormaSrv(L"source/Textures/default_nmap.dds");
 	skullRitem->Mat = move(skullMat);
 
 	XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.4f, 0.4f, 0.4f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
@@ -47,45 +44,40 @@ void D3DApp::LoadRenderItem()
 //	skullRitem->StartIndexLocation = skull->StartIndexLocation;
 // 	skullRitem->BaseVertexLocation = skull->BaseVertexLocation;
 
-	//mRitemLayer[(int)RenderLayer::Opaque].push_back(move(skullRitem));
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, skullRitem);
+
+	auto grid = std::make_unique<MeshInfo>();
+	// 
+	grid->CreateGrid(20.0f, 30.0f, 60, 40);
+	// 
+	auto gridRitem = std::make_unique<RenderItem>();
+	gridRitem->IndexCount = grid->IndexCount;
+
+	auto tile0 = std::make_unique<LoadMaterial>();
+	//auto tile0 = std::make_unique<Material>();
+	tile0->Name = "tile0";
+	tile0->MatCBIndex = 1;
+	tile0->SetDiffuseSrv(L"source/Textures/tile.dds");
+	tile0->DiffuseAlbedo = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
+	tile0->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
+
+	tile0->Roughness = 0.1f;
+
+	gridRitem->World = MathHelper::Identity4x4();
+	XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
+	gridRitem->ObjCBIndex = 1;
+	gridRitem->Mat = move(tile0);
+	gridRitem->Geo = move(grid);
+	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	//gridRitem->IndexCount = gridRitem->Geo->DrawArgs["grid"].IndexCount;
+	//gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
+	//gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
+	GetEngine()->AddRenderItem(RenderLayer::Opaque, gridRitem);
 
 	mSky.LoadRenderItem();
 	GetEngine()->CreateShaderParameter();
-// 	auto sky = std::make_unique<LoadMaterial>();
-// 	sky->Name = "sky";
-// 	sky->MatCBIndex = 0;
-// 	sky->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-// 	sky->FresnelR0 = XMFLOAT3(0.1f, 0.1f, 0.1f);
-// 	sky->Roughness = 1.0f;
-// 	sky->SetDiffuseSrv(L"source/Textures/grasscube1024.dds");
-// // 
-// // 	//GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);
-// // 
-//  	auto sphere = std::make_unique<MeshInfo>();
-// // 
-// 	sphere->CreateSphere(0.5f, 20, 20);
-// // 	//skullRitem->Geo = move(sky);
-// // 
-//  	auto skyRitem = std::make_unique<RenderItem>();
-//  	skyRitem->IndexCount = sphere->IndexCount;
-// // 
-// 	XMStoreFloat4x4(&skyRitem->World, XMMatrixScaling(5000.0f, 5000.0f, 5000.0f));
-// 	skyRitem->TexTransform = MathHelper::Identity4x4();
-// 	skyRitem->ObjCBIndex = 0;
-// 	skyRitem->Mat = move(sky);
-//  	skyRitem->Geo = move(sphere);
-//  	skyRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-// 	//skyRitem->StartIndexLocation = skyRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
-// 	//skyRitem->BaseVertexLocation = skyRitem->Geo->DrawArgs["sphere"].BaseVertexLocation;
-// 	//mRitemLayer[(int)RenderLayer::Sky].push_back(move(skyRitem));
-// 	GetEngine()->AddRenderItem(RenderLayer::Sky, skyRitem);
-
-	//BuildBaseRootSignature();
 
 	BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
-	//BuildSkyPSO(L"Shader\\Sky.hlsl", L"Shader\\Sky.hlsl");
-
 }
 
 void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
@@ -223,7 +215,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 
-	mSky.Draw(Timer);
+	//mSky.Draw(Timer);
 	//mCommandList->SetPipelineState(mSkyPSO.Get());
 	//GetEngine()->DrawRenderItems(RenderLayer::Sky/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Sky]*/);
 
