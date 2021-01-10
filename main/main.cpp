@@ -19,9 +19,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	D3DApp app;
 	app.Init(Width, Height, window.GetWnd());
 
-	if (!CGame::GetInstance()->Initialize(hInstance, window.GetWnd()))
+	//if (!CGame::GetInstance()->Initialize(hInstance, window.GetWnd()))
 	{
-		return FALSE;
+		//return FALSE;
 	}
 
 	MSG msg = { 0 };

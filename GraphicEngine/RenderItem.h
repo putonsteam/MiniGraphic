@@ -4,6 +4,7 @@
 #include "LoadMaterial.h"
 #include "LoadTexture.h"
 #include "MeshInfo.h"
+#include "Lighting.h"
 
 struct ObjectConstants
 {

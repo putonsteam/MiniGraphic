@@ -18,6 +18,7 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 
 void D3DApp::LoadRenderItem()
 {
+	GetEngine()->BuildBaseRootSignature();
 	GetEngine()->InitDescriptorHeap(10);
 
 	auto skull = std::make_unique<MeshInfo>();
@@ -50,6 +51,7 @@ void D3DApp::LoadRenderItem()
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, skullRitem);
 
 	mSky.LoadRenderItem();
+	GetEngine()->CreateShaderParameter();
 // 	auto sky = std::make_unique<LoadMaterial>();
 // 	sky->Name = "sky";
 // 	sky->MatCBIndex = 0;
@@ -79,7 +81,7 @@ void D3DApp::LoadRenderItem()
 // 	//mRitemLayer[(int)RenderLayer::Sky].push_back(move(skyRitem));
 // 	GetEngine()->AddRenderItem(RenderLayer::Sky, skyRitem);
 
-	BuildBaseRootSignature();
+	//BuildBaseRootSignature();
 
 	BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
 	//BuildSkyPSO(L"Shader\\Sky.hlsl", L"Shader\\Sky.hlsl");
@@ -99,7 +101,7 @@ void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	//
 	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	opaquePsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
-	opaquePsoDesc.pRootSignature = mBaseRootSignature.Get();
+	opaquePsoDesc.pRootSignature = GetEngine()->GetBaseRootSignature();
 	opaquePsoDesc.VS =
 	{
 		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),
@@ -121,63 +123,6 @@ void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	opaquePsoDesc.SampleDesc.Quality = /*m4xMsaaState ? (m4xMsaaQuality - 1) : */0;
 	opaquePsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
 	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mBasePSO)));
-}
-
-array<const CD3DX12_STATIC_SAMPLER_DESC, 6> D3DApp::GetStaticSamplers()
-{
-	// Applications usually only need a handful of samplers.  So just define them all up front
-	// and keep them available as part of the root signature.  
-
-	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
-		0, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
-		1, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-		2, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
-		3, // shaderRegister
-		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
-
-	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
-		4, // shaderRegister
-		D3D12_FILTER_ANISOTROPIC, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
-		0.0f,                             // mipLODBias
-		8);                               // maxAnisotropy
-
-	const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
-		5, // shaderRegister
-		D3D12_FILTER_ANISOTROPIC, // filter
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
-		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
-		0.0f,                              // mipLODBias
-		8);                                // maxAnisotropy
-
-	return {
-		pointWrap, pointClamp,
-		linearWrap, linearClamp,
-		anisotropicWrap, anisotropicClamp };
 }
 
 void D3DApp::Run()
@@ -258,25 +203,18 @@ void D3DApp::Draw(const GameTimer& Timer)
 	ID3D12DescriptorHeap* descriptorHeaps[] = { GetEngine()->GetSrvDescHeap() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-	mCommandList->SetGraphicsRootSignature(mBaseRootSignature.Get());
-
-	//auto passCB = mCurrFrameResource->PassCB->Resource();
-	mCommandList->SetGraphicsRootConstantBufferView(1, PassCB->Resource()->GetGPUVirtualAddress());
-
-	// Bind all the materials used in this scene.  For structured buffers, we can bypass the heap and 
-	// set as a root descriptor.
-	//auto matBuffer = mCurrFrameResource->MaterialBuffer->Resource();
-	mCommandList->SetGraphicsRootShaderResourceView(2, MaterialBuffer->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootSignature(GetEngine()->GetBaseRootSignature());
 
 	// Bind the sky cube map.  For our demos, we just use one "world" cube map representing the environment
 	// from far away, so all objects will use the same cube map and we only need to set it once per-frame.  
 	// If we wanted to use "local" cube maps, we would have to change them per-object, or dynamically
 	// index into an array of cube maps.
-
+	GetEngine()->SetBaseRootSignature1();
+	GetEngine()->SetBaseRootSignature2();
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE skyTexDescriptor(mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	//skyTexDescriptor.Offset(mSkyTexHeapIndex, mCbvSrvDescriptorSize);
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
-	mCommandList->SetGraphicsRootDescriptorTable(3, msky.GetSkyHeapIndex());
+	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
 
 	// Bind all the textures used in this scene.  Observe
 	// that we only have to specify the first descriptor in the table.  

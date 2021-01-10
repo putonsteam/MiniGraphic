@@ -1,10 +1,15 @@
 #include "Sky.h"
 
+CD3DX12_GPU_DESCRIPTOR_HANDLE Sky::GetSkyHeapStart()
+{
+	return GetEngine()->GetDescriptorHeap()->GetGpuDescHandle(mSkyTexHeapIndex);
+}
+
 void Sky::LoadRenderItem()
 {
 	auto sky = std::make_unique<LoadMaterial>();
 	sky->Name = "sky";
-	sky->MatCBIndex = 0;
+	sky->MatCBIndex = 1;
 	sky->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	sky->FresnelR0 = XMFLOAT3(0.1f, 0.1f, 0.1f);
 	sky->Roughness = 1.0f;
@@ -22,7 +27,7 @@ void Sky::LoadRenderItem()
 	// 
 	XMStoreFloat4x4(&skyRitem->World, XMMatrixScaling(5000.0f, 5000.0f, 5000.0f));
 	skyRitem->TexTransform = MathHelper::Identity4x4();
-	skyRitem->ObjCBIndex = 0;
+	skyRitem->ObjCBIndex = 1;
 	skyRitem->Mat = move(sky);
 	skyRitem->Geo = move(sphere);
 	skyRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -35,11 +40,7 @@ void Sky::LoadRenderItem()
 
 	//BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
 	BuildSkyPSO(L"Shader\\Sky.hlsl", L"Shader\\Sky.hlsl");
-	mSkyTexHeapIndex = LoadCure("source/Textures/grasscube1024.dds");
-}
-
-UINT GetSkyHeapIndex() {
-	return mSkyTexHeapIndex;
+	mSkyTexHeapIndex = GetEngine()->GetTextureList()->LoadCure(L"source/Textures/grasscube1024.dds");
 }
 
 void Sky::BuildSkyPSO(const wchar_t* vsFile, const wchar_t* psFile)

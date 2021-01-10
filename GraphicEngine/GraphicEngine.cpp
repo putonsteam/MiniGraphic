@@ -337,10 +337,10 @@ void GraphicEngine::Run()
 void GraphicEngine::Update(const GameTimer& Timer)
 {
 	OnKeyboardInput();
-	UpdateShaderParameter(Timer)
+	UpdateShaderParameter(Timer);
 }
 
-void UpdateShaderParameter(const GameTimer& Timer)
+void GraphicEngine::UpdateShaderParameter(const GameTimer& Timer)
 {
 	UpdateObjectCBs(Timer);
 	UpdateMaterialBuffer(Timer);
@@ -349,9 +349,9 @@ void UpdateShaderParameter(const GameTimer& Timer)
 
 void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 {
-	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
-		for (int j = 0; mRitemLayer[i].size(); ++j)
+		for (int j = 0; j != mRitemLayer[i].size(); ++j)
 		{
 			RenderItem* e = mRitemLayer[i][j].get();
 			// Only update the cbuffer data if the constants have changed.  
@@ -377,11 +377,11 @@ void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 
 void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 {
-	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
-		for (int j = 0; mRitemLayer[i].size(); ++j)
+		for (int j = 0; j != mRitemLayer[i].size(); ++j)
 		{
-			LoadMaterial* mat = mRitemLayer[(int)RenderLayer::Opaque][1]->Mat->get();
+			LoadMaterial* mat = (mRitemLayer[i][j]->Mat).get();
 			//for (auto& e : mMaterials)
 			//{
 				// Only update the cbuffer data if the constants have changed.  If the cbuffer
@@ -445,16 +445,34 @@ void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 void GraphicEngine::CreateShaderParameter()
 {
 	int count = 0;
-	for (int i = 0; i <= (int)RenderLayer::Count; ++i)
+	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
-		for (int j = 0; mRitemLayer[i].size(); ++j)
+		for (int j = 0; j != mRitemLayer[i].size(); ++j)
 		{
 			count++;
 		}
 	}
-PassCB = make_unique<ConstantBuffer<PassConstants>>(1);
-ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(count);
-MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(count);
+PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1);
+//PassCB->Init(m_D3DDevice.Get(), 1);
+ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count);
+//PassCB->Init(m_D3DDevice.Get(), count);
+MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count);
+//PassCB->Init(m_D3DDevice.Get(), count);
+}
+
+void GraphicEngine::SetBaseRootSignature0()
+{
+
+}
+
+void GraphicEngine::SetBaseRootSignature1()
+{
+	mCommandList->SetGraphicsRootConstantBufferView(1, PassCB->Resource()->GetGPUVirtualAddress());
+}
+
+void GraphicEngine::SetBaseRootSignature2()
+{
+	mCommandList->SetGraphicsRootShaderResourceView(2, MaterialBuffer->Resource()->GetGPUVirtualAddress());
 }
 
 
@@ -464,7 +482,7 @@ void GraphicEngine::BuildBaseRootSignature()
 	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable1;
-	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 1, 0);
+	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[5];
@@ -504,7 +522,64 @@ void GraphicEngine::BuildBaseRootSignature()
 }
 
 
-void GraphicEngine::AddRenderItem(RenderLayer layer, make_unique<RenderItem>& item)
+array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GraphicEngine::GetStaticSamplers()
+{
+	// Applications usually only need a handful of samplers.  So just define them all up front
+	// and keep them available as part of the root signature.  
+
+	const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
+		0, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
+		1, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_POINT, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+		2, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC linearClamp(
+		3, // shaderRegister
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP); // addressW
+
+	const CD3DX12_STATIC_SAMPLER_DESC anisotropicWrap(
+		4, // shaderRegister
+		D3D12_FILTER_ANISOTROPIC, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressW
+		0.0f,                             // mipLODBias
+		8);                               // maxAnisotropy
+
+	const CD3DX12_STATIC_SAMPLER_DESC anisotropicClamp(
+		5, // shaderRegister
+		D3D12_FILTER_ANISOTROPIC, // filter
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressU
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressV
+		D3D12_TEXTURE_ADDRESS_MODE_CLAMP,  // addressW
+		0.0f,                              // mipLODBias
+		8);                                // maxAnisotropy
+
+	return {
+		pointWrap, pointClamp,
+		linearWrap, linearClamp,
+		anisotropicWrap, anisotropicClamp };
+}
+
+void GraphicEngine::AddRenderItem(RenderLayer layer, unique_ptr<RenderItem>& item)
 {
 	mRitemLayer[(int)layer].push_back(move(item));
 }

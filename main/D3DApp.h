@@ -19,7 +19,6 @@ public:
 	void BuildPSO(const wchar_t* vsFile, const wchar_t* psFile);
 
 private:
-	array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
 	void LoadRenderItem();
 
 	FrameResource* mCurrFrameResource;

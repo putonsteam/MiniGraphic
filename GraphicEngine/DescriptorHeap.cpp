@@ -16,6 +16,13 @@ DescriptorHeap::DescriptorHeap(int size)
 
 }
 
+CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGpuDescHandle(int offset)
+{
+CD3DX12_GPU_DESCRIPTOR_HANDLE descriptor(mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+descriptor.Offset(offset, GetEngine()->mCbvSrvUavDescriptorSize);
+return descriptor;
+}
+
 int DescriptorHeap::DistributeTexDescriptor(ID3D12Resource* tex)
 {
 	//
@@ -40,12 +47,21 @@ int DescriptorHeap::DistributeTexDescriptor(ID3D12Resource* tex)
 
 int DescriptorHeap::DistributeCubeDescriptor(ID3D12Resource* tex)
 {
+	int HeapIndex = Index;
+	Index++;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+	hDescriptor.Offset(HeapIndex, GetEngine()->mCbvSrvUavDescriptorSize);
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 	srvDesc.TextureCube.MostDetailedMip = 0;
-	srvDesc.TextureCube.MipLevels = skyTex->GetDesc().MipLevels;
+	srvDesc.TextureCube.MipLevels = tex->GetDesc().MipLevels;
 	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-	srvDesc.Format = skyTex->GetDesc().Format;
-	md3dDevice->CreateShaderResourceView(skyTex.Get(), &srvDesc, hDescriptor);
+	srvDesc.Format = tex->GetDesc().Format;
+	GetEngine()->GetDevice()->CreateShaderResourceView(tex, &srvDesc, hDescriptor);
+	return HeapIndex;
 }
 

@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Feature\Sky.h" />
     <ClInclude Include="GraphicEngine\Camera.h" />
     <ClInclude Include="GraphicEngine\ConstantBuffer.h" />
     <ClInclude Include="GraphicEngine\DDSTextureLoader.h" />
@@ -169,7 +170,6 @@
     <ClInclude Include="GraphicEngine\LoadTexture.h" />
     <ClInclude Include="GraphicEngine\DescriptorHeap.h" />
     <ClInclude Include="GraphicEngine\ShaderState.h" />
-    <ClInclude Include="GraphicEngine\Sky.h" />
     <ClInclude Include="GraphicEngine\UploadBuffer.h" />
     <ClInclude Include="HeaderFiles\framework.h" />
     <ClInclude Include="HeaderFiles\Macro.h" />
@@ -189,6 +189,7 @@
     <ClInclude Include="Vulkan\VulkanHeader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Feature\Sky.cpp" />
     <ClCompile Include="GraphicEngine\Camera.cpp" />
     <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp" />
     <ClCompile Include="GraphicEngine\FrameResource.cpp" />
@@ -200,7 +201,6 @@
     <ClCompile Include="GraphicEngine\LoadTexture.cpp" />
     <ClCompile Include="GraphicEngine\DescriptorHeap.cpp" />
     <ClCompile Include="GraphicEngine\ShaderState.cpp" />
-    <ClCompile Include="GraphicEngine\Sky.cpp" />
     <ClCompile Include="main\D3DApp.cpp" />
     <ClCompile Include="main\D3DWindows.cpp" />
     <ClCompile Include="main\main.cpp" />

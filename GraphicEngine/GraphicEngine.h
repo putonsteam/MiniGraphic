@@ -82,8 +82,13 @@ public:
 	void UpdateMainPassCB(const GameTimer& Timer);
 	void UpdateShaderParameter(const GameTimer& Timer);
 	void CreateShaderParameter();
-	void AddRenderItem(RenderLayer layer, make_unique<RenderItem>& item);
+	void AddRenderItem(RenderLayer layer, unique_ptr<RenderItem>& item);
 	void BuildBaseRootSignature();
+	array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
+
+	void SetBaseRootSignature0();
+	void SetBaseRootSignature1();
+	void SetBaseRootSignature2();
 
 	UINT mRtvDescriptorSize = 0;
 	UINT mDsvDescriptorSize = 0;
@@ -135,10 +140,9 @@ private:
 	FrameResource* mFrameResource;
 	POINT mLastMousePos;
 	GameTimer mTimer;
-
-	std::unique_ptr<ConstantBuffer<PassConstants>> PassCB = nullptr;
-	std::unique_ptr<ConstantBuffer<ObjectConstants>> ObjectCB = nullptr;
-	std::unique_ptr<ConstantBuffer<MaterialData>> MaterialBuffer = nullptr;
+	std::unique_ptr< ConstantBuffer<PassConstants> > PassCB;
+	std::unique_ptr< ConstantBuffer<ObjectConstants> > ObjectCB;
+	std::unique_ptr< ConstantBuffer<MaterialData> > MaterialBuffer;
 	PassConstants mMainPassCB;  // index 0 of pass cbuffer.
 	std::vector<unique_ptr<RenderItem>> mRitemLayer[(int)RenderLayer::Count];
 	ComPtr<ID3D12RootSignature> mBaseRootSignature;

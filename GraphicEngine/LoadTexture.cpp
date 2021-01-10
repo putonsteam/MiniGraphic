@@ -13,7 +13,7 @@ int LoadTexture::Load(const wchar_t* file)
 	texMap.DescriptorIndex = GetEngine()->GetDescriptorHeap()->DistributeTexDescriptor(texMap.Resource.Get());
 	TextureList.push_back(move(texMap));
 
-	return texMap.DescriptorIndex;
+	return TextureList.back().DescriptorIndex;
 }
 
 int LoadTexture::LoadCure(const wchar_t* file)
@@ -24,10 +24,10 @@ int LoadTexture::LoadCure(const wchar_t* file)
 		GetEngine()->GetCommandList(), file,
 		texMap.Resource, texMap.UploadHeap));
 
-	texMap.DescriptorIndex = GetEngine()->GetDescriptorHeap()->DistributeTexDescriptor(texMap.Resource.Get());
+	texMap.DescriptorIndex = GetEngine()->GetDescriptorHeap()->DistributeCubeDescriptor(texMap.Resource.Get());
 	TextureList.push_back(move(texMap));
 
-	return texMap.DescriptorIndex;
+	return TextureList.back().DescriptorIndex;
 }
 
 
