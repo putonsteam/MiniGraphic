@@ -123,7 +123,7 @@ void MeshInfo::CreateSphere(float radius, uint32 sliceCount, uint32 stackCount)
 	indices.insert(indices.end(), begin(sphere.GetIndices16()), end(sphere.GetIndices16()));
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
-	Name = "shapeGeo";
+	Name = "sphere";
 
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &VertexBufferCPU));
 	CopyMemory(VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
@@ -162,7 +162,7 @@ void MeshInfo::CreateGrid(float width, float depth, uint32 m, uint32 n)
 	indices.insert(indices.end(), begin(sphere.GetIndices16()), end(sphere.GetIndices16()));
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
-	Name = "shapeGeo";
+	Name = "grid";
 
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &VertexBufferCPU));
 	CopyMemory(VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);

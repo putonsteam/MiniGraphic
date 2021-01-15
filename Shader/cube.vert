@@ -46,6 +46,7 @@ void main()
    gl_Position = ubuf.MVP * ubuf.position[gl_VertexIndex];
 
    // GL->VK conventions
-   gl_Position.y = -gl_Position.y;
+   double y = -gl_Position.y;
+   gl_Position.y = float(y);
    gl_Position.z = (gl_Position.z + gl_Position.w) / 2.0;
 }

@@ -54,7 +54,6 @@ void D3DApp::LoadRenderItem()
 	gridRitem->IndexCount = grid->IndexCount;
 
 	auto tile0 = std::make_unique<LoadMaterial>();
-	//auto tile0 = std::make_unique<Material>();
 	tile0->Name = "tile0";
 	tile0->MatCBIndex = 1;
 	tile0->SetDiffuseSrv(L"source/Textures/tile.dds");
@@ -215,7 +214,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 
-	//mSky.Draw(Timer);
+	mSky.Draw(Timer);
 	//mCommandList->SetPipelineState(mSkyPSO.Get());
 	//GetEngine()->DrawRenderItems(RenderLayer::Sky/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Sky]*/);
 

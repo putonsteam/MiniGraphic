@@ -349,6 +349,7 @@ void GraphicEngine::UpdateShaderParameter(const GameTimer& Timer)
 
 void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 {
+	ObjectCB->Update();
 	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
 		for (int j = 0; j != mRitemLayer[i].size(); ++j)
@@ -377,6 +378,7 @@ void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 
 void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 {
+	MaterialBuffer->Update();
 	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
 		for (int j = 0; j != mRitemLayer[i].size(); ++j)
@@ -410,6 +412,7 @@ void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 
 void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 {
+	PassCB->Update();
 	XMMATRIX view = /*GetEngine()->*/GetCamera()->GetView();
 	XMMATRIX proj = /*GetEngine()->*/GetCamera()->GetProj();
 
@@ -418,19 +421,8 @@ void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 	XMMATRIX invProj = XMMatrixInverse(&XMMatrixDeterminant(proj), proj);
 	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
 
-	// 	XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
-	// 	XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
-	// 	XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
-	// 	XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-	//XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
 	mMainPassCB.EyePosW = /*GetEngine()->*/GetCamera()->GetPosition3f();
-	// 	mMainPassCB.RenderTargetSize = XMFLOAT2((float)GetEngine()->mClientWidth, (float)GetEngine()->mClientHeight);
-	// 	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / GetEngine()->mClientWidth, 1.0f / GetEngine()->mClientHeight);
-	// 	mMainPassCB.NearZ = 1.0f;
-	// 	mMainPassCB.FarZ = 1000.0f;
-	// 	mMainPassCB.TotalTime = Timer.TotalTime();
-	// 	mMainPassCB.DeltaTime = Timer.DeltaTime();
 	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
 	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
 	mMainPassCB.Lights[0].Strength = { 0.6f, 0.6f, 0.6f };

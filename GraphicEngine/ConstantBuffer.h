@@ -20,6 +20,7 @@ public:
 	//     ConstantBuffer& operator=(const ConstantBuffer& rhs) = delete;
 	~ConstantBuffer();
 	void Update(int elementIndex, const T& data);
+	void Update();
 	D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress();
 
 	// We cannot reset the allocator until the GPU is done processing the commands.
@@ -60,11 +61,16 @@ ConstantBuffer<T>::~ConstantBuffer()
 template<class T>
 void ConstantBuffer<T>::Update(int elementIndex, const T& data)
 {
+	CBuffer[CurrentSize]->CopyData(elementIndex, data);
+}
+
+template<class T>
+void ConstantBuffer<T>::Update()
+{
 	if (++CurrentSize >= MAX_CONSTENT_BUFFER_SIZE)
 	{
 		CurrentSize = 0;
 	}
-	CBuffer[CurrentSize]->CopyData(elementIndex, data);
 }
 
 template<class T>

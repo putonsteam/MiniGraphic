@@ -17,6 +17,7 @@ void LoadMaterial::SetDiffuseSrv(const wchar_t* file)
 {
 	DiffuseSrvHeapIndex = GetEngine()->GetTextureList()->Load(file);
 }
+
 void LoadMaterial::SetNormaSrv(const wchar_t* file)
 {
 	NormalSrvHeapIndex = GetEngine()->GetTextureList()->Load(file);

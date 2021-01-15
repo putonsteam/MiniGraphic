@@ -62,20 +62,9 @@ cbuffer cbPerObject : register(b0)
 // Constant data that varies per material.
 cbuffer cbPass : register(b1)
 {
-    //float4x4 gView;
-    //float4x4 gInvView;
-    //float4x4 gProj;
-    //float4x4 gInvProj;
     float4x4 gViewProj;
-    //float4x4 gInvViewProj;
     float3 gEyePosW;
     float cbPerObjectPad1;
-    //float2 gRenderTargetSize;
-    //float2 gInvRenderTargetSize;
-    //float gNearZ;
-    //float gFarZ;
-    //float gTotalTime;
-    //float gDeltaTime;
     float4 gAmbientLight;
 
     // Indices [0, NUM_DIR_LIGHTS) are directional lights;
