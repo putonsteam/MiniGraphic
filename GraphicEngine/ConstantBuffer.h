@@ -15,7 +15,7 @@ class ConstantBuffer
 {
 public:
 	ConstantBuffer() {};
-	ConstantBuffer(ID3D12Device* device, UINT elementCount);
+	ConstantBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer);
 	//     ConstantBuffer(const ConstantBuffer& rhs) = delete;
 	//     ConstantBuffer& operator=(const ConstantBuffer& rhs) = delete;
 	~ConstantBuffer();
@@ -44,11 +44,11 @@ private:
 };
 
 template<class T>
-ConstantBuffer<T>::ConstantBuffer(ID3D12Device* device, UINT elementCount)
+ConstantBuffer<T>::ConstantBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer)
 {
 	for (int i = 0; i != MAX_CONSTENT_BUFFER_SIZE; ++i)
 	{
-		CBuffer.push_back(make_unique<UploadBuffer<T>>(device, elementCount, true));
+		CBuffer.push_back(make_unique<UploadBuffer<T>>(device, elementCount, isConstantBuffer));
 	}
 }
 

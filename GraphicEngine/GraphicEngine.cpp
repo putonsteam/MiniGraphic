@@ -444,11 +444,11 @@ void GraphicEngine::CreateShaderParameter()
 			count++;
 		}
 	}
-PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1);
+PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1, true);
 //PassCB->Init(m_D3DDevice.Get(), 1);
-ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count);
+ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count, true);
 //PassCB->Init(m_D3DDevice.Get(), count);
-MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count);
+MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count, false);
 //PassCB->Init(m_D3DDevice.Get(), count);
 }
 
