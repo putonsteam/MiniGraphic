@@ -74,3 +74,7 @@ x64/Debug/MiniGraphic.tlog/unsuccessfulbuild
 x64/Debug/vc141.idb
 x64/Debug/vc141.pdb
 .vs/MiniGraphic/v15/Browse.VC.opendb
+.vs/MiniGraphic/v15/ipch/AutoPCH/277cc897f68acecf/SHADOWMAP.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/c124b560ab555be/LANDSCAPE.ipch
+Debug/Landscape.obj
+Debug/ShadowMap.obj

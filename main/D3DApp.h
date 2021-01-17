@@ -7,6 +7,7 @@
 #include "RenderItem.h"
 #include "Lighting.h"
 #include "Sky.h"
+#include "ShadowMap.h"
 
 class D3DApp
 {
@@ -33,6 +34,7 @@ private:
 	ComPtr<ID3D12PipelineState> mBasePSO;
 
 	Sky mSky;
+	ShadowMap* mShadowMap;
 };
 
 

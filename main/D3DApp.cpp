@@ -12,6 +12,7 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	GetEngine()->SetPosition(0.0f, 2.0f, -15.0f);
 
 	LoadRenderItem();
+	//mShadowMap = new ShadowMap(2048, 2048);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -19,7 +20,6 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 void D3DApp::LoadRenderItem()
 {
 	GetEngine()->BuildBaseRootSignature();
-	GetEngine()->InitDescriptorHeap(10);
 
 	auto skull = std::make_unique<MeshInfo>();
 	auto skullRitem = std::make_unique<RenderItem>();
@@ -68,7 +68,6 @@ void D3DApp::LoadRenderItem()
 	gridRitem->Mat = move(tile0);
 	gridRitem->Geo = move(grid);
 	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	//gridRitem->IndexCount = gridRitem->Geo->DrawArgs["grid"].IndexCount;
 	//gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
 	//gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, gridRitem);
@@ -177,19 +176,10 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// Reusing the command list reuses memory.
 	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mBasePSO.Get()));
 
-	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
-	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
-
-	// Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	// Clear the back buffer and depth buffer.
-	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	// Specify the buffers we are going to render to.
-	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
+	// Bind the pass constant buffer for the shadow map pass.
+	//auto passCB = mCurrFrameResource->PassCB->Resource();
+	//D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = passCB->GetGPUVirtualAddress() + 1 * passCBByteSize;
+	//mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { GetEngine()->GetSrvDescHeap() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -202,15 +192,29 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// index into an array of cube maps.
 	GetEngine()->SetBaseRootSignature1();
 	GetEngine()->SetBaseRootSignature2();
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE skyTexDescriptor(mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	//skyTexDescriptor.Offset(mSkyTexHeapIndex, mCbvSrvDescriptorSize);
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
-
 	// Bind all the textures used in this scene.  Observe
-	// that we only have to specify the first descriptor in the table.  
-	// The root signature knows how many descriptors are expected in the table.
+// that we only have to specify the first descriptor in the table.  
+// The root signature knows how many descriptors are expected in the table.
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	//mShadowMap->DrawSceneToShadowMap();
+
+	// Indicate a state transition on the resource usage.
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	
+	mCommandList->SetPipelineState(mBasePSO.Get());
+
+	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
+	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
+
+	// Clear the back buffer and depth buffer.
+	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	// Specify the buffers we are going to render to.
+	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
 
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 

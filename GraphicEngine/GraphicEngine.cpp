@@ -11,6 +11,7 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 	m_D3DMinFeatureLevel = level;
 	InitDevice();
 	InitGPUCommand();
+	InitDescriptorHeap(10);
 	InitDesHeap();
 	InitSwapchainAndRvt();
 	InitDsv();
@@ -68,7 +69,6 @@ XMFLOAT3 GraphicEngine::GetPosition3f()const
 {
 	return mCamera.GetPosition3f();
 }
-
 
 XMMATRIX GraphicEngine::GetView()const
 {
@@ -168,20 +168,20 @@ ID3D12Resource* GraphicEngine::CurrentBackBuffer()const
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::CurrentBackBufferView()const
 {
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
-		mRtvHeap->GetCPUDescriptorHandleForHeapStart(),
-		mCurrBackBufferIndex,
-		mRtvDescriptorSize);
+	return mDescriptorHeap->GetSrvDescriptorCpuHandle(mCurrBackBufferIndex);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::DepthStencilView()const
 {
-	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
+	return mDescriptorHeap->GetDsvDescriptorCpuHandle(0);
 }
 
 void GraphicEngine::InitDescriptorHeap(int size)
 {
-	mDescriptorHeap = new DescriptorHeap(size);
+	mDescriptorHeap = new DescriptorHeap();
+	mDescriptorHeap->CreateSrvDescriptorHeap(size);
+	mDescriptorHeap->CreateRtvDescriptorHeap(SwapChainBufferCount);
+	mDescriptorHeap->CreateDsvDescriptorHeap(2);
 }
 
 void GraphicEngine::InitGPUCommand()
@@ -246,35 +246,17 @@ void GraphicEngine::InitSwapchainAndRvt()
 		mSwapChain.GetAddressOf()));
 
 
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
-	rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_D3DDevice->CreateDescriptorHeap(
-		&rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
-
 	mCurrBackBufferIndex = 0;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
-		m_D3DDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
-		rtvHeapHandle.Offset(1, mRtvDescriptorSize);
+		m_D3DDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, mDescriptorHeap->GetRtvDescriptorCpuHandle());
 	}
 }
 
 void GraphicEngine::InitDsv()
 {
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dsvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_D3DDevice->CreateDescriptorHeap(
-		&dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
-
 	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -302,7 +284,7 @@ void GraphicEngine::InitDsv()
 		IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
 
 	// Create descriptor to mip level 0 of entire resource using the format of the resource.
-	m_D3DDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), nullptr, mDsvHeap->GetCPUDescriptorHandleForHeapStart());
+	m_D3DDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), nullptr, mDescriptorHeap->GetDsvDescriptorCpuHandle());
 
 	//ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
@@ -467,14 +449,13 @@ void GraphicEngine::SetBaseRootSignature2()
 	mCommandList->SetGraphicsRootShaderResourceView(2, MaterialBuffer->Resource()->GetGPUVirtualAddress());
 }
 
-
 void GraphicEngine::BuildBaseRootSignature()
 {
 	CD3DX12_DESCRIPTOR_RANGE texTable0;
-	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable1;
-	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1, 0);
+	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 2, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[5];

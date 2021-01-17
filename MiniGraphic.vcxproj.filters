@@ -129,6 +129,12 @@
     <ClInclude Include="Feature\Sky.h">
       <Filter>Feature</Filter>
     </ClInclude>
+    <ClInclude Include="Feature\ShadowMap.h">
+      <Filter>Feature</Filter>
+    </ClInclude>
+    <ClInclude Include="Feature\Landscape.h">
+      <Filter>Feature</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
@@ -192,6 +198,12 @@
       <Filter>Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Feature\Sky.cpp">
+      <Filter>Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature\ShadowMap.cpp">
+      <Filter>Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature\Landscape.cpp">
       <Filter>Feature</Filter>
     </ClCompile>
   </ItemGroup>

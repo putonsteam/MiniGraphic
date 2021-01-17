@@ -2,7 +2,7 @@
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE Sky::GetSkyHeapStart()
 {
-	return GetEngine()->GetDescriptorHeap()->GetGpuDescHandle(mSkyTexHeapIndex);
+	return GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mSkyTexHeapIndex);
 }
 
 void Sky::LoadRenderItem()
