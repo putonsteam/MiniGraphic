@@ -61,6 +61,10 @@ ShadowMap::ShadowMap(UINT width, UINT height)
 
 	mViewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (int)width, (int)height };
+	
+	CreateShadowMapTex();
+	CreateDescriptors();
+	CreatePSO();
 }
 
 void ShadowMap::DrawSceneToShadowMap()
@@ -97,8 +101,8 @@ void ShadowMap::DrawSceneToShadowMap()
 void ShadowMap::CreatePSO()
 {
 	ShaderState* shader = GetEngine()->GetShader();
-	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shaders\\Shadows.hlsl");
-	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shaders\\Shadows.hlsl");
+	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\Shadows.hlsl");
+	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\Shadows.hlsl");
 // 	mShaders["shadowVS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "VS", "vs_5_1");
 // 	mShaders["shadowOpaquePS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "PS", "ps_5_1");
 // 	mShaders["shadowAlphaTestedPS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", alphaTestDefines, "PS", "ps_5_1");

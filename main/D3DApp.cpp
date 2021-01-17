@@ -12,7 +12,7 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	GetEngine()->SetPosition(0.0f, 2.0f, -15.0f);
 
 	LoadRenderItem();
-	//mShadowMap = new ShadowMap(2048, 2048);
+	mShadowMap = new ShadowMap(2048, 2048);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -198,7 +198,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 // The root signature knows how many descriptors are expected in the table.
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	//mShadowMap->DrawSceneToShadowMap();
+	mShadowMap->DrawSceneToShadowMap();
 
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),

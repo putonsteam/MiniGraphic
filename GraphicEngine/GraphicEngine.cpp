@@ -168,7 +168,7 @@ ID3D12Resource* GraphicEngine::CurrentBackBuffer()const
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::CurrentBackBufferView()const
 {
-	return mDescriptorHeap->GetSrvDescriptorCpuHandle(mCurrBackBufferIndex);
+	return mDescriptorHeap->GetRtvDescriptorCpuHandle(mCurrBackBufferIndex);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::DepthStencilView()const
