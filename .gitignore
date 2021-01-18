@@ -101,3 +101,6 @@ gfxrecon_capture_20210113T134845.gfxr
 Debug/Sky.obj
 .vs/MiniGraphic/v15/ipch/AutoPCH/80fda877627b58c/SKY.ipch
 .vs/MiniGraphic/v15/Browse.VC.opendb
+.vs/MiniGraphic/v15/ipch/AutoPCH/fb3c592b6fc25137/SHADOWMAP.ipch
+Debug/Landscape.obj
+Debug/ShadowMap.obj

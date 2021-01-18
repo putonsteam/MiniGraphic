@@ -16,8 +16,6 @@ class ConstantBuffer
 public:
 	ConstantBuffer() {};
 	ConstantBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer);
-	//     ConstantBuffer(const ConstantBuffer& rhs) = delete;
-	//     ConstantBuffer& operator=(const ConstantBuffer& rhs) = delete;
 	~ConstantBuffer();
 	void Update(int elementIndex, const T& data);
 	void Update();

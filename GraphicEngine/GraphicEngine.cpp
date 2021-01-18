@@ -103,7 +103,7 @@ void GraphicEngine::OnMouseMove(WPARAM btnState, int x, int y)
 }
 
 GraphicEngine::GraphicEngine()
-{ 
+{
 
 }
 
@@ -267,7 +267,7 @@ void GraphicEngine::InitDsv()
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.Format = mDepthStencilFormat;
 	depthStencilDesc.SampleDesc.Count = 1;
-    depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -426,12 +426,9 @@ void GraphicEngine::CreateShaderParameter()
 			count++;
 		}
 	}
-PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1, true);
-//PassCB->Init(m_D3DDevice.Get(), 1);
-ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count, true);
-//PassCB->Init(m_D3DDevice.Get(), count);
-MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count, false);
-//PassCB->Init(m_D3DDevice.Get(), count);
+	PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1, true);
+	ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count, true);
+	MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count, false);
 }
 
 void GraphicEngine::SetBaseRootSignature0()

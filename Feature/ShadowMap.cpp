@@ -62,6 +62,14 @@ ShadowMap::ShadowMap(UINT width, UINT height)
 	mViewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, 1.0f };
 	mScissorRect = { 0, 0, (int)width, (int)height };
 	
+	// Estimate the scene bounding sphere manually since we know how the scene was constructed.
+// The grid is the "widest object" with a width of 20 and depth of 30.0f, and centered at
+// the world space origin.  In general, you need to loop over every world space vertex
+// position and compute the bounding sphere.
+	mSceneBounds.Center = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	mSceneBounds.Radius = sqrtf(10.0f*10.0f + 15.0f*15.0f);
+
+	PassCB = make_unique<ConstantBuffer<PassConstants>>(GetEngine()->GetDevice(), 1, true);
 	CreateShadowMapTex();
 	CreateDescriptors();
 	CreatePSO();
@@ -141,6 +149,86 @@ void ShadowMap::CreatePSO()
 	smapPsoDesc.NumRenderTargets = 0;
 
 	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&smapPsoDesc, IID_PPV_ARGS(&mShadowMapPSO)));
+}
+
+void ShadowMap::UpdateShadowTransform()
+{
+	// Only the first "main" light casts a shadow.
+	XMVECTOR lightDir = XMLoadFloat3(&mRotatedLightDirections[0]);
+	XMVECTOR lightPos = -2.0f*mSceneBounds.Radius*lightDir;
+	XMVECTOR targetPos = XMLoadFloat3(&mSceneBounds.Center);
+	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMMATRIX lightView = XMMatrixLookAtLH(lightPos, targetPos, lightUp);
+
+	XMStoreFloat3(&mLightPosW, lightPos);
+
+	// Transform bounding sphere to light space.
+	XMFLOAT3 sphereCenterLS;
+	XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(targetPos, lightView));
+
+	// Ortho frustum in light space encloses scene.
+	float l = sphereCenterLS.x - mSceneBounds.Radius;
+	float b = sphereCenterLS.y - mSceneBounds.Radius;
+	float n = sphereCenterLS.z - mSceneBounds.Radius;
+	float r = sphereCenterLS.x + mSceneBounds.Radius;
+	float t = sphereCenterLS.y + mSceneBounds.Radius;
+	float f = sphereCenterLS.z + mSceneBounds.Radius;
+
+	mLightNearZ = n;
+	mLightFarZ = f;
+	XMMATRIX lightProj = XMMatrixOrthographicOffCenterLH(l, r, b, t, n, f);
+
+	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+	XMMATRIX T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
+	XMMATRIX S = lightView * lightProj*T;
+	XMStoreFloat4x4(&mLightView, lightView);
+	XMStoreFloat4x4(&mLightProj, lightProj);
+	XMStoreFloat4x4(&mShadowTransform, S);
+}
+
+void ShadowMap::Update(const GameTimer& Timer)
+{
+	mLightRotationAngle += 0.1f*Timer.DeltaTime();
+
+	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
+	for (int i = 0; i < 3; ++i)
+	{
+		XMVECTOR lightDir = XMLoadFloat3(&mBaseLightDirections[i]);
+		lightDir = XMVector3TransformNormal(lightDir, R);
+		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
+	}
+	UpdateShadowTransform();
+	UpdateShadowPassCB();
+}
+
+void ShadowMap::UpdateShadowPassCB()
+{
+	XMMATRIX view = XMLoadFloat4x4(&mLightView);
+	XMMATRIX proj = XMLoadFloat4x4(&mLightProj);
+
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	XMMATRIX invProj = XMMatrixInverse(&XMMatrixDeterminant(proj), proj);
+	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
+
+	//XMStoreFloat4x4(&mShadowPassCB.View, XMMatrixTranspose(view));
+	//XMStoreFloat4x4(&mShadowPassCB.InvView, XMMatrixTranspose(invView));
+	//XMStoreFloat4x4(&mShadowPassCB.Proj, XMMatrixTranspose(proj));
+	//XMStoreFloat4x4(&mShadowPassCB.InvProj, XMMatrixTranspose(invProj));
+	XMStoreFloat4x4(&mShadowPassCB.ViewProj, XMMatrixTranspose(viewProj));
+	//XMStoreFloat4x4(&mShadowPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
+	mShadowPassCB.EyePosW = mLightPosW;
+	//mShadowPassCB.RenderTargetSize = XMFLOAT2((float)mWidth, (float)mHeight);
+	//mShadowPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mWidth, 1.0f / mHeight);
+	//mShadowPassCB.NearZ = mLightNearZ;
+	//mShadowPassCB.FarZ = mLightFarZ;
+
+	PassCB->Update(0, mShadowPassCB);
 }
 
 

@@ -152,6 +152,7 @@ void D3DApp::Update(const GameTimer& Timer)
 		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
 	}
 
+	mShadowMap->Update(Timer);
 	//AnimateMaterials(Timer);
 	//UpdateObjectCBs(Timer);
 	//UpdateMaterialBuffer(Timer);
