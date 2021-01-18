@@ -124,9 +124,9 @@ private:
 	ComPtr<IDXGISwapChain> mSwapChain;
 	int mCurrBackBufferIndex = 0;
 	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
-	ComPtr<ID3D12DescriptorHeap> mRtvHeap;
+	//ComPtr<ID3D12DescriptorHeap> mRtvHeap;
 
-	ComPtr<ID3D12DescriptorHeap> mDsvHeap;
+	//ComPtr<ID3D12DescriptorHeap> mDsvHeap;
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
 	D3D12_VIEWPORT mScreenViewport;
