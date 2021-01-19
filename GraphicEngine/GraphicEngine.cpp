@@ -404,6 +404,8 @@ void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
 
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
+	//XMMATRIX shadowTransform = XMLoadFloat4x4(GetST);
+	XMStoreFloat4x4(&mMainPassCB.ShadowTransform, XMMatrixTranspose(shadowTransform));
 	mMainPassCB.EyePosW = /*GetEngine()->*/GetCamera()->GetPosition3f();
 	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
 	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };

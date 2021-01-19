@@ -85,7 +85,7 @@ void ShadowMap::DrawSceneToShadowMap()
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap.Get(),
 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-	//UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstants));
+	
 
 	// Clear the back buffer and depth buffer.
 	mCommandList->ClearDepthStencilView(GetEngine()->GetDescriptorHeap()->GetDsvDescriptorCpuHandle(mShadowMapDsvIndex),
@@ -95,7 +95,10 @@ void ShadowMap::DrawSceneToShadowMap()
 	// depth buffer.  Setting a null render target will disable color writes.
 	// Note the active PSO also must specify a render target count of 0.
 	mCommandList->OMSetRenderTargets(0, nullptr, false, &GetEngine()->GetDescriptorHeap()->GetDsvDescriptorCpuHandle(mShadowMapDsvIndex));
-
+	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstants));
+	// Bind the pass constant buffer for the shadow map pass.
+	D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = PassCB->Resource()->GetGPUVirtualAddress() + 0 * passCBByteSize;
+	mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);
 	mCommandList->SetPipelineState(mShadowMapPSO.Get());
 
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque);
@@ -222,6 +225,7 @@ void ShadowMap::UpdateShadowPassCB()
 	//XMStoreFloat4x4(&mShadowPassCB.InvProj, XMMatrixTranspose(invProj));
 	XMStoreFloat4x4(&mShadowPassCB.ViewProj, XMMatrixTranspose(viewProj));
 	//XMStoreFloat4x4(&mShadowPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
+
 	mShadowPassCB.EyePosW = mLightPosW;
 	//mShadowPassCB.RenderTargetSize = XMFLOAT2((float)mWidth, (float)mHeight);
 	//mShadowPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mWidth, 1.0f / mHeight);
