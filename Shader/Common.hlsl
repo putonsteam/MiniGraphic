@@ -47,6 +47,7 @@ SamplerState gsamLinearWrap       : register(s2);
 SamplerState gsamLinearClamp      : register(s3);
 SamplerState gsamAnisotropicWrap  : register(s4);
 SamplerState gsamAnisotropicClamp : register(s5);
+SamplerComparisonState gsamShadow : register(s6);
 
 // Constant data that varies per frame.
 cbuffer cbPerObject : register(b0)
@@ -63,6 +64,7 @@ cbuffer cbPerObject : register(b0)
 cbuffer cbPass : register(b1)
 {
     float4x4 gViewProj;
+	//float4x4 gShadowTransform;
     float3 gEyePosW;
     float cbPerObjectPad1;
     float4 gAmbientLight;

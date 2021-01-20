@@ -84,7 +84,7 @@ public:
 	void CreateShaderParameter();
 	void AddRenderItem(RenderLayer layer, unique_ptr<RenderItem>& item);
 	void BuildBaseRootSignature();
-	array<const CD3DX12_STATIC_SAMPLER_DESC, 6> GetStaticSamplers();
+	array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers();
 
 	void SetBaseRootSignature0();
 	void SetBaseRootSignature1();

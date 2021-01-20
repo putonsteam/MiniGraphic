@@ -13,14 +13,20 @@ ShaderState::ShaderState()
 
 ComPtr<ID3DBlob> ShaderState::CreateVSShader(const wchar_t* file)
 {
-	mShaders["test1"] = CompileShader(file, nullptr, "VS", "vs_5_1");
-	return mShaders["test1"];
+	wstring wstr(file);
+	string name(wstr.begin(), wstr.end());
+	name += "vs";
+	mShaders[name] = CompileShader(file, nullptr, "VS", "vs_5_1");
+	return mShaders[name];
 }
 
 ComPtr<ID3DBlob> ShaderState::CreatePSShader(const wchar_t* file)
 {
-	mShaders["test2"] = CompileShader(file, nullptr, "PS", "ps_5_1");
-	return mShaders["test2"];
+	wstring wstr(file);
+	string name(wstr.begin(), wstr.end());
+	name += "ps";
+	mShaders[name] = CompileShader(file, nullptr, "PS", "ps_5_1");
+	return mShaders[name];
 }
 
 ComPtr<ID3DBlob> ShaderState::CompileShader(
