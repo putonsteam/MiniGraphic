@@ -13,7 +13,8 @@ public:
 	void UpdateShadowPassCB();
 	void UpdateShadowTransform();
 	void Update(const GameTimer& Timer);
-	XMFLOAT4X4& GetST() { return mShadowTransform; }
+	XMFLOAT4X4& GetShadowTransform() { return mShadowTransform; }
+
 
 private:
 	ComPtr<ID3D12Resource> mShadowMap = nullptr;
@@ -46,4 +47,6 @@ private:
 		XMFLOAT3(-0.57735f, -0.57735f, 0.57735f),
 		XMFLOAT3(0.0f, -0.707f, -0.707f)
 	};
+
+
 };

@@ -63,7 +63,6 @@ cbuffer cbPerObject : register(b0)
 cbuffer cbPass : register(b1)
 {
     float4x4 gViewProj;
-	float4x4 gShadowTransform;
     float3 gEyePosW;
     float cbPerObjectPad1;
     float4 gAmbientLight;
@@ -73,6 +72,11 @@ cbuffer cbPass : register(b1)
     // indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
     // are spot lights for a maximum of MaxLights per object.
     Light gLights[MaxLights];
+};
+
+cbuffer cbFeature : register(b2)
+{
+	float4x4 gShadowTransform;
 };
 
 float CalcShadowFactor(float4 shadowPosH)

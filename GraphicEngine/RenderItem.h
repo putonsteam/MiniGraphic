@@ -23,7 +23,6 @@ struct PassConstants
 	// 		DirectX::XMFLOAT4X4 Proj = MathHelper::Identity4x4();
 	// 		DirectX::XMFLOAT4X4 InvProj = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
-	DirectX::XMFLOAT4X4 ShadowTransform = MathHelper::Identity4x4();
 
 	//DirectX::XMFLOAT4X4 InvViewProj = MathHelper::Identity4x4();
 	DirectX::XMFLOAT3 EyePosW = { 0.0f, 0.0f, 0.0f };
@@ -42,6 +41,11 @@ struct PassConstants
 	// indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
 	// are spot lights for a maximum of MaxLights per object.
 	Light Lights[MaxLights];
+};
+
+struct ConstantFeature
+{
+DirectX::XMFLOAT4X4 ShadowTransform = MathHelper::Identity4x4();
 };
 
 struct MaterialData

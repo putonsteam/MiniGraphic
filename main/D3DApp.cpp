@@ -12,7 +12,9 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	GetEngine()->SetPosition(0.0f, 2.0f, -15.0f);
 
 	LoadRenderItem();
+
 	mShadowMap = new ShadowMap(2048, 2048);
+	FeatureCB = make_unique<ConstantBuffer<ConstantFeature>>(GetEngine()->GetDevice(), 1, true);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -153,15 +155,16 @@ void D3DApp::Update(const GameTimer& Timer)
 	}
 
 	mShadowMap->Update(Timer);
-	//AnimateMaterials(Timer);
-	//UpdateObjectCBs(Timer);
-	//UpdateMaterialBuffer(Timer);
-	//UpdateShadowTransform(Timer);
-	//UpdateMainPassCB(Timer);
-	//UpdateShadowPassCB(Timer);
-	//UpdateSsaoCB(Timer);
-	//GetEngine()->UpdateShaderParameter(Timer);
+	UpdateFeatureCB(Timer);
 
+}
+
+void D3DApp::UpdateFeatureCB(const GameTimer& Timer)
+{
+	FeatureCB->Update();
+	XMMATRIX shadowTransform = XMLoadFloat4x4(&(mShadowMap->GetShadowTransform()));
+	XMStoreFloat4x4(&mFeatureCB.ShadowTransform, XMMatrixTranspose(shadowTransform));
+	FeatureCB->Update(0, mFeatureCB);
 }
 
 void D3DApp::Draw(const GameTimer& Timer)
@@ -216,7 +219,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
-
+	mCommandList->SetGraphicsRootShaderResourceView(5, FeatureCB->Resource()->GetGPUVirtualAddress());
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 
 	mSky.Draw(Timer);
@@ -246,4 +249,5 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// set until the GPU finishes processing all the commands prior to this Signal().
 	GetEngine()->GetCommandQueue()->Signal(GetEngine()->GetFence(), GetEngine()->GetCurrentFence());
 }
+
 

@@ -211,6 +211,7 @@ void ShadowMap::Update(const GameTimer& Timer)
 
 void ShadowMap::UpdateShadowPassCB()
 {
+	PassCB->Update();
 	XMMATRIX view = XMLoadFloat4x4(&mLightView);
 	XMMATRIX proj = XMLoadFloat4x4(&mLightProj);
 
@@ -234,5 +235,9 @@ void ShadowMap::UpdateShadowPassCB()
 
 	PassCB->Update(0, mShadowPassCB);
 }
+
+
+
+
 
 

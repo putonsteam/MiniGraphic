@@ -17,6 +17,7 @@ public:
 	void Run();
 	void Draw(const GameTimer& Timer);
 	void Update(const GameTimer& Timer);
+	void UpdateFeatureCB(const GameTimer& Timer);
 	void BuildPSO(const wchar_t* vsFile, const wchar_t* psFile);
 
 private:
@@ -32,7 +33,8 @@ private:
 	XMFLOAT3 mRotatedLightDirections[3];
 	CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 	ComPtr<ID3D12PipelineState> mBasePSO;
-
+	ConstantFeature mFeatureCB;  // index 0 of pass cbuffer.
+	unique_ptr< ConstantBuffer<ConstantFeature> > FeatureCB;
 	Sky mSky;
 	ShadowMap* mShadowMap;
 };
