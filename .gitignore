@@ -141,3 +141,7 @@ x64/Debug/MiniGraphic.tlog/unsuccessfulbuild
 x64/Debug/vc141.idb
 x64/Debug/vc141.pdb
 MiniGraphic.exe
+.vs/MiniGraphic/v15/ipch/AutoPCH/4073a28d19a729b6/LANDSCAPE.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/7c8a37ffa2891800/SSAO.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/a0ded439c57dbe13/SSAO.ipch
+Debug/Ssao.obj
