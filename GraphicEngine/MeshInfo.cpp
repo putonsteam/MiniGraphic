@@ -39,23 +39,6 @@ void MeshInfo::LoadTextMesh(const char* file)
 
 		XMVECTOR N = XMLoadFloat3(&vertices[i].Normal);
 
-		// Generate a tangent vector so normal mapping works.  We aren't applying
-		// a texture map to the skull, so we just need any tangent vector so that
-		// the math works out to give us the original interpolated vertex normal.
-// 		XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-// 		if (fabsf(XMVectorGetX(XMVector3Dot(N, up))) < 1.0f - 0.001f)
-// 		{
-// 			XMVECTOR T = XMVector3Normalize(XMVector3Cross(up, N));
-// 			XMStoreFloat3(&vertices[i].TangentU, T);
-// 		}
-// 		else
-// 		{
-// 			up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-// 			XMVECTOR T = XMVector3Normalize(XMVector3Cross(N, up));
-// 			XMStoreFloat3(&vertices[i].TangentU, T);
-// 		}
-
-
 		vMin = XMVectorMin(vMin, P);
 		vMax = XMVectorMax(vMax, P);
 	}

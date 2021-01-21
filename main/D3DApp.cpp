@@ -194,16 +194,17 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// from far away, so all objects will use the same cube map and we only need to set it once per-frame.  
 	// If we wanted to use "local" cube maps, we would have to change them per-object, or dynamically
 	// index into an array of cube maps.
-	GetEngine()->SetBaseRootSignature1();
+	//GetEngine()->SetBaseRootSignature1();
 	GetEngine()->SetBaseRootSignature2();
-	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
+
 	// Bind all the textures used in this scene.  Observe
 // that we only have to specify the first descriptor in the table.  
 // The root signature knows how many descriptors are expected in the table.
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
 	mShadowMap->DrawSceneToShadowMap();
-
+	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
+	GetEngine()->SetBaseRootSignature1();
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));

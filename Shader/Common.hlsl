@@ -64,7 +64,6 @@ cbuffer cbPerObject : register(b0)
 cbuffer cbPass : register(b1)
 {
     float4x4 gViewProj;
-	//float4x4 gShadowTransform;
     float3 gEyePosW;
     float cbPerObjectPad1;
     float4 gAmbientLight;

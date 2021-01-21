@@ -46,6 +46,11 @@ public:
 		UINT64 byteSize,
 		ComPtr<ID3D12Resource>& uploadBuffer);
 
+	ComPtr<ID3D12Resource> CreateArray2DBuffer(
+		D3D12_RESOURCE_DESC& texDesc,
+		const void* initData,
+		UINT64 byteSize,
+		ComPtr<ID3D12Resource>& uploadBuffer);
 	ID3D12Device* GetDevice() { return m_D3DDevice.Get(); }
 	ID3D12CommandQueue* GetCommandQueue() { return mCommandQueue.Get(); }
 	ID3D12CommandAllocator* GetCommandAlloc() { return mDirectCmdListAlloc.Get(); }
@@ -98,6 +103,7 @@ public:
 	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	int mClientWidth = 800;
 	int mClientHeight = 600;
+	PassConstants* GetMainPassCb() { return &mMainPassCB; }
 
 private:
 	bool InitDevice();

@@ -404,8 +404,6 @@ void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
 
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-	//XMMATRIX shadowTransform = XMLoadFloat4x4(GetST);
-	//XMStoreFloat4x4(&mMainPassCB.ShadowTransform, XMMatrixTranspose(shadowTransform));
 	mMainPassCB.EyePosW = /*GetEngine()->*/GetCamera()->GetPosition3f();
 	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
 	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
@@ -674,6 +672,57 @@ ComPtr<ID3D12Resource> GraphicEngine::CreateDefaultBuffer(
 
 
 	return defaultBuffer;
+}
+
+ComPtr<ID3D12Resource> GraphicEngine::CreateArray2DBuffer(
+	D3D12_RESOURCE_DESC& texDesc,
+	const void* initData,
+	UINT64 byteSize,
+	ComPtr<ID3D12Resource>& uploadBuffer)
+{
+	ComPtr<ID3D12Resource> defaultBuffer;
+
+ThrowIfFailed(m_D3DDevice->CreateCommittedResource(
+	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	D3D12_HEAP_FLAG_NONE,
+	&texDesc,
+	D3D12_RESOURCE_STATE_GENERIC_READ,
+	nullptr,
+	IID_PPV_ARGS(&defaultBuffer)));
+
+//
+// In order to copy CPU memory data into our default buffer, we need to create
+// an intermediate upload heap. 
+//
+
+const UINT num2DSubresources = texDesc.DepthOrArraySize * texDesc.MipLevels;
+const UINT64 uploadBufferSize = GetRequiredIntermediateSize(defaultBuffer.Get(), 0, num2DSubresources);
+
+ThrowIfFailed(m_D3DDevice->CreateCommittedResource(
+	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+	D3D12_HEAP_FLAG_NONE,
+	&CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+	D3D12_RESOURCE_STATE_GENERIC_READ,
+	nullptr,
+	IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
+
+D3D12_SUBRESOURCE_DATA subResourceData = {};
+subResourceData.pData = initData;
+subResourceData.RowPitch = texDesc.Height * byteSize;
+subResourceData.SlicePitch = subResourceData.RowPitch * texDesc.Width;
+
+//
+// Schedule to copy the data to the default resource, and change states.
+// Note that mCurrSol is put in the GENERIC_READ state so it can be 
+// read by a shader.
+//
+
+mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
+	D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST));
+UpdateSubresources(mCommandList.Get(), defaultBuffer.Get(), uploadBuffer.Get(),
+	0, 0, num2DSubresources, &subResourceData);
+mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
+	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 GraphicEngine* GetEngine()

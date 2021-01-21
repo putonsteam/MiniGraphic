@@ -132,7 +132,7 @@
     <ClInclude Include="Feature\ShadowMap.h">
       <Filter>Feature</Filter>
     </ClInclude>
-    <ClInclude Include="Feature\Landscape.h">
+    <ClInclude Include="Feature\Ssao.h">
       <Filter>Feature</Filter>
     </ClInclude>
   </ItemGroup>
@@ -203,7 +203,7 @@
     <ClCompile Include="Feature\ShadowMap.cpp">
       <Filter>Feature</Filter>
     </ClCompile>
-    <ClCompile Include="Feature\Landscape.cpp">
+    <ClCompile Include="Feature\Ssao.cpp">
       <Filter>Feature</Filter>
     </ClCompile>
   </ItemGroup>

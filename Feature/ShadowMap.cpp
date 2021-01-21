@@ -6,8 +6,8 @@ void ShadowMap::CreateShadowMapTex()
 	ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
 	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	texDesc.Alignment = 0;
-	texDesc.Width = GetEngine()->mClientWidth;
-	texDesc.Height = GetEngine()->mClientHeight;
+	texDesc.Width = mWidth;
+	texDesc.Height = mHeight;
 	texDesc.DepthOrArraySize = 1;
 	texDesc.MipLevels = 1;
 	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -114,11 +114,6 @@ void ShadowMap::CreatePSO()
 	ShaderState* shader = GetEngine()->GetShader();
 	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\Shadows.hlsl");
 	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\Shadows.hlsl");
-// 	mShaders["shadowVS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "VS", "vs_5_1");
-// 	mShaders["shadowOpaquePS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", nullptr, "PS", "ps_5_1");
-// 	mShaders["shadowAlphaTestedPS"] = d3dUtil::CompileShader(L"Shaders\\Shadows.hlsl", alphaTestDefines, "PS", "ps_5_1");
-
-
 	//
 	// PSO for opaque objects.
 	//
@@ -196,7 +191,7 @@ void ShadowMap::UpdateShadowTransform()
 
 void ShadowMap::Update(const GameTimer& Timer)
 {
-	mLightRotationAngle += 0.1f*Timer.DeltaTime();
+	//mLightRotationAngle += 0.1f*Timer.DeltaTime();
 
 	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
 	for (int i = 0; i < 3; ++i)
