@@ -7,7 +7,21 @@ Ssao::Ssao(UINT width, UINT height)
 	mHeight = height;
 
 	SsaoCb = make_unique<ConstantBuffer<SsaoConstants>>(GetEngine()->GetDevice(), 1, true);
+	CreateNormalTex();
+	CreateNormalDescriptors();
+	CreateNormalDepthPSO();
+
+	CreateSsaoTex();
+	CreateSsaoDescriptors();
 	InitSsaoBuffer();
+	BuildRandomVectorTexture();
+	BuildSsaoRootSignature();
+	CreateSsaoPSO();
+}
+
+void Ssao::Update(const GameTimer& Timer)
+{
+	UpdateSsaoCB(Timer);
 }
 
 void Ssao::CreateNormalTex()
@@ -305,29 +319,29 @@ void Ssao::CreateSsaoTex()
 
 void Ssao::CreateSsaoDescriptors()
 {
-D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-srvDesc.Format = NormalMapFormat;
-srvDesc.Texture2D.MostDetailedMip = 0;
-srvDesc.Texture2D.MipLevels = 1;
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = NormalMapFormat;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
 
-srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-GetEngine()->GetDevice()->CreateShaderResourceView(mRandomVectorMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-mRandomVectorSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	GetEngine()->GetDevice()->CreateShaderResourceView(mRandomVectorMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
+	mRandomVectorSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 
-srvDesc.Format = AmbientMapFormat;
-GetEngine()->GetDevice()->CreateShaderResourceView(mSsaoMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-mSsaoSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
+	srvDesc.Format = AmbientMapFormat;
+	GetEngine()->GetDevice()->CreateShaderResourceView(mSsaoMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
+	mSsaoSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 
-D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-rtvDesc.Texture2D.MipSlice = 0;
-rtvDesc.Texture2D.PlaneSlice = 0;
-rtvDesc.Format = AmbientMapFormat;
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.Texture2D.PlaneSlice = 0;
+	rtvDesc.Format = AmbientMapFormat;
 
-GetEngine()->GetDevice()->CreateRenderTargetView(mSsaoMap.Get(), &rtvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-mSsaoRtvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
+	GetEngine()->GetDevice()->CreateRenderTargetView(mSsaoMap.Get(), &rtvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
+	mSsaoRtvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 }
 
 void Ssao::BuildRandomVectorTexture()
@@ -364,14 +378,14 @@ void Ssao::BuildRandomVectorTexture()
 
 void Ssao::InitSsaoBuffer()
 {
-BuildOffsetVectors();
-ssaoCB.InvRenderTargetSize = XMFLOAT2(1.0f / mWidth, 1.0f / mHeight);
+	BuildOffsetVectors();
+	ssaoCB.InvRenderTargetSize = XMFLOAT2(1.0f / mWidth, 1.0f / mHeight);
 
-// Coordinates given in view space.
-ssaoCB.OcclusionRadius = 0.5f;
-ssaoCB.OcclusionFadeStart = 0.2f;
-ssaoCB.OcclusionFadeEnd = 1.0f;
-ssaoCB.SurfaceEpsilon = 0.05f;
+	// Coordinates given in view space.
+	ssaoCB.OcclusionRadius = 0.5f;
+	ssaoCB.OcclusionFadeStart = 0.2f;
+	ssaoCB.OcclusionFadeEnd = 1.0f;
+	ssaoCB.SurfaceEpsilon = 0.05f;
 }
 
 void Ssao::BuildOffsetVectors()
@@ -415,8 +429,7 @@ void Ssao::BuildOffsetVectors()
 	}
 }
 
-
-void Ssao::UpdateSsaoCB(const GameTimer& gt)
+void Ssao::UpdateSsaoCB(const GameTimer& Timer)
 {
 	SsaoCb->Update();
 

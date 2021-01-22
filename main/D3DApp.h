@@ -8,6 +8,7 @@
 #include "Lighting.h"
 #include "Sky.h"
 #include "ShadowMap.h"
+#include "Ssao.h"
 
 class D3DApp
 {
@@ -24,19 +25,20 @@ private:
 	void LoadRenderItem();
 
 	FrameResource* mCurrFrameResource;
-	float mLightRotationAngle = 0.0f;
-	XMFLOAT3 mBaseLightDirections[3] = {
-		XMFLOAT3(0.57735f, -0.57735f, 0.57735f),
-		XMFLOAT3(-0.57735f, -0.57735f, 0.57735f),
-		XMFLOAT3(0.0f, -0.707f, -0.707f)
-	};
-	XMFLOAT3 mRotatedLightDirections[3];
+// 	float mLightRotationAngle = 0.0f;
+// 	XMFLOAT3 mBaseLightDirections[3] = {
+// 		XMFLOAT3(0.57735f, -0.57735f, 0.57735f),
+// 		XMFLOAT3(-0.57735f, -0.57735f, 0.57735f),
+// 		XMFLOAT3(0.0f, -0.707f, -0.707f)
+// 	};
+	//XMFLOAT3 mRotatedLightDirections[3];
 	CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 	ComPtr<ID3D12PipelineState> mBasePSO;
 	ConstantFeature mFeatureCB;  // index 0 of pass cbuffer.
 	unique_ptr< ConstantBuffer<ConstantFeature> > FeatureCB;
 	Sky mSky;
 	ShadowMap* mShadowMap;
+	Ssao* mSsao;
 };
 
 

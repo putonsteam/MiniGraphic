@@ -35,7 +35,8 @@ public:
 	void CreateSsaoDescriptors();
 	void BuildRandomVectorTexture();
 	void ComputeSsao(ID3D12GraphicsCommandList* cmdList);
-	void UpdateSsaoCB(const GameTimer& gt);
+	void UpdateSsaoCB(const GameTimer& Timer);
+	void Update(const GameTimer& Timer);
 	void BuildOffsetVectors();
 	void InitSsaoBuffer();
 

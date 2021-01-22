@@ -14,6 +14,7 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	LoadRenderItem();
 
 	mShadowMap = new ShadowMap(2048, 2048);
+	mSsao = new Ssao(Width, Height);
 	FeatureCB = make_unique<ConstantBuffer<ConstantFeature>>(GetEngine()->GetDevice(), 1, true);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
@@ -144,17 +145,18 @@ void D3DApp::Update(const GameTimer& Timer)
 	// Animate the lights (and hence shadows).
 	//
 
-	mLightRotationAngle += 0.1f*Timer.DeltaTime();
-
-	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
-	for (int i = 0; i < 3; ++i)
-	{
-		XMVECTOR lightDir = XMLoadFloat3(&mBaseLightDirections[i]);
-		lightDir = XMVector3TransformNormal(lightDir, R);
-		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
-	}
+// 	mLightRotationAngle += 0.1f*Timer.DeltaTime();
+// 
+// 	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
+// 	for (int i = 0; i < 3; ++i)
+// 	{
+// 		XMVECTOR lightDir = XMLoadFloat3(&mBaseLightDirections[i]);
+// 		lightDir = XMVector3TransformNormal(lightDir, R);
+// 		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
+// 	}
 
 	mShadowMap->Update(Timer);
+	mSsao->Update(Timer);
 	UpdateFeatureCB(Timer);
 
 }
@@ -203,6 +205,10 @@ void D3DApp::Draw(const GameTimer& Timer)
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
 	mShadowMap->DrawSceneToShadowMap();
+
+	mSsao->DrawNormalsAndDepth(mCommandList);
+	mSsao->ComputeSsao(mCommandList);
+
 	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
 	GetEngine()->SetBaseRootSignature1();
 	// Indicate a state transition on the resource usage.
@@ -220,7 +226,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
-	mCommandList->SetGraphicsRootShaderResourceView(5, FeatureCB->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootConstantBufferView(5, FeatureCB->Resource()->GetGPUVirtualAddress());
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 
 	mSky.Draw(Timer);
