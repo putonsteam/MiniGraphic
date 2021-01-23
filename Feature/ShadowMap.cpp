@@ -125,6 +125,7 @@ void ShadowMap::CreatePSO()
 	smapPsoDesc.RasterizerState.DepthBias = 100000;
 	smapPsoDesc.RasterizerState.DepthBiasClamp = 0.0f;
 	smapPsoDesc.RasterizerState.SlopeScaledDepthBias = 1.0f;
+
 	smapPsoDesc.VS =
 	{
 		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),

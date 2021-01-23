@@ -9,9 +9,6 @@ struct SsaoConstants
 	DirectX::XMFLOAT4X4 ProjTex;
 	DirectX::XMFLOAT4   OffsetVectors[14];
 
-	// For SsaoBlur.hlsl
-	//DirectX::XMFLOAT4 BlurWeights[3];
-
 	DirectX::XMFLOAT2 InvRenderTargetSize = { 0.0f, 0.0f };
 
 	// Coordinates given in view space.
@@ -33,12 +30,13 @@ public:
 	void CreateSsaoPSO();
 	void CreateSsaoTex();
 	void CreateSsaoDescriptors();
-	void BuildRandomVectorTexture();
+	void CreateRandomVectorTexture();
+	void CreateRandomDescriptors();
 	void ComputeSsao(ID3D12GraphicsCommandList* cmdList);
 	void UpdateSsaoCB(const GameTimer& Timer);
 	void Update(const GameTimer& Timer);
 	void BuildOffsetVectors();
-	void InitSsaoBuffer();
+	void InitSsaoCb();
 
 private:
 	UINT mWidth;

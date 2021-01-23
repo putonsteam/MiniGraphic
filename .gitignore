@@ -145,3 +145,6 @@ MiniGraphic.exe
 .vs/MiniGraphic/v15/ipch/AutoPCH/7c8a37ffa2891800/SSAO.ipch
 .vs/MiniGraphic/v15/ipch/AutoPCH/a0ded439c57dbe13/SSAO.ipch
 Debug/Ssao.obj
+.vs/MiniGraphic/v15/ipch/AutoPCH/ff7037d71c5d626b/SSAO.ipch
+Debug/shadowmap.obj.enc
+Debug/ssao.obj.enc

@@ -13,10 +13,14 @@ Ssao::Ssao(UINT width, UINT height)
 
 	CreateSsaoTex();
 	CreateSsaoDescriptors();
-	InitSsaoBuffer();
-	BuildRandomVectorTexture();
+
+	CreateRandomVectorTexture();
+	CreateRandomDescriptors();
+
 	BuildSsaoRootSignature();
 	CreateSsaoPSO();
+
+	InitSsaoCb();
 }
 
 void Ssao::Update(const GameTimer& Timer)
@@ -144,8 +148,8 @@ void Ssao::CreateSsaoPSO()
 	ShaderState* shader = GetEngine()->GetShader();
 	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\Ssao.hlsl");
 	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\Ssao.hlsl");
-	ssaoPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
-	ssaoPsoDesc.pRootSignature = GetEngine()->GetBaseRootSignature();
+	ssaoPsoDesc.InputLayout = { nullptr, 0 };
+	ssaoPsoDesc.pRootSignature = mSsaoRootSignature.Get();
 	ssaoPsoDesc.VS =
 	{
 		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),
@@ -157,9 +161,14 @@ void Ssao::CreateSsaoPSO()
 		ps->GetBufferSize()
 	};
 
-	// SSAO effect does not need the depth buffer.
+	ssaoPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	ssaoPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	ssaoPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	ssaoPsoDesc.SampleMask = UINT_MAX;
+	ssaoPsoDesc.NumRenderTargets = 1;
 	ssaoPsoDesc.DepthStencilState.DepthEnable = false;
 	ssaoPsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	ssaoPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	ssaoPsoDesc.RTVFormats[0] = AmbientMapFormat;
 	ssaoPsoDesc.SampleDesc.Count = 1;
 	ssaoPsoDesc.SampleDesc.Quality = 0;
@@ -176,13 +185,12 @@ void Ssao::BuildSsaoRootSignature()
 	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[0].InitAsConstantBufferView(0);
-	slotRootParameter[1].InitAsConstants(1, 1);
-	slotRootParameter[2].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[3].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[1].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[2].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
 		0, // shaderRegister
@@ -222,7 +230,7 @@ void Ssao::BuildSsaoRootSignature()
 	};
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -295,8 +303,8 @@ void Ssao::CreateSsaoTex()
 	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	texDesc.Alignment = 0;
 	// Ambient occlusion maps are at half resolution.
-	texDesc.Width = mWidth / 2;
-	texDesc.Height = mHeight / 2;
+	texDesc.Width = mWidth;
+	texDesc.Height = mHeight;
 	texDesc.DepthOrArraySize = 1;
 	texDesc.MipLevels = 1;
 	texDesc.SampleDesc.Count = 1;
@@ -326,10 +334,6 @@ void Ssao::CreateSsaoDescriptors()
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	GetEngine()->GetDevice()->CreateShaderResourceView(mRandomVectorMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-	mRandomVectorSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
-
 	srvDesc.Format = AmbientMapFormat;
 	GetEngine()->GetDevice()->CreateShaderResourceView(mSsaoMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
 	mSsaoSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
@@ -340,11 +344,11 @@ void Ssao::CreateSsaoDescriptors()
 	rtvDesc.Texture2D.PlaneSlice = 0;
 	rtvDesc.Format = AmbientMapFormat;
 
-	GetEngine()->GetDevice()->CreateRenderTargetView(mSsaoMap.Get(), &rtvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-	mSsaoRtvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
+	GetEngine()->GetDevice()->CreateRenderTargetView(mSsaoMap.Get(), &rtvDesc, GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle());
+	mSsaoRtvIndex = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
 }
 
-void Ssao::BuildRandomVectorTexture()
+void Ssao::CreateRandomVectorTexture()
 {
 	D3D12_RESOURCE_DESC texDesc;
 	ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
@@ -373,10 +377,23 @@ void Ssao::BuildRandomVectorTexture()
 	}
 
 	ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
-	GetEngine()->CreateArray2DBuffer(texDesc, (void*)initData, sizeof(PackedVector::XMCOLOR), VertexBufferUploader);
+	mRandomVectorMap = GetEngine()->CreateArray2DBuffer(texDesc, (void*)initData, sizeof(PackedVector::XMCOLOR), VertexBufferUploader);
 }
 
-void Ssao::InitSsaoBuffer()
+void Ssao::CreateRandomDescriptors()
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	GetEngine()->GetDevice()->CreateShaderResourceView(mRandomVectorMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
+	mRandomVectorSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
+}
+
+void Ssao::InitSsaoCb()
 {
 	BuildOffsetVectors();
 	ssaoCB.InvRenderTargetSize = XMFLOAT2(1.0f / mWidth, 1.0f / mHeight);

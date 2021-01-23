@@ -11,7 +11,7 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 	m_D3DMinFeatureLevel = level;
 	InitDevice();
 	InitGPUCommand();
-	InitDescriptorHeap(10);
+	InitDescriptorHeap(10, SwapChainBufferCount + 2, 2);
 	InitDesHeap();
 	InitSwapchainAndRvt();
 	InitDsv();
@@ -179,12 +179,12 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicEngine::DepthStencilView()const
 	return mDescriptorHeap->GetDsvDescriptorCpuHandle(0);
 }
 
-void GraphicEngine::InitDescriptorHeap(int size)
+void GraphicEngine::InitDescriptorHeap(int Srvsize, int RtvSize, int DsvSize)
 {
 	mDescriptorHeap = new DescriptorHeap();
-	mDescriptorHeap->CreateSrvDescriptorHeap(size);
-	mDescriptorHeap->CreateRtvDescriptorHeap(SwapChainBufferCount);
-	mDescriptorHeap->CreateDsvDescriptorHeap(2);
+	mDescriptorHeap->CreateSrvDescriptorHeap(Srvsize);
+	mDescriptorHeap->CreateRtvDescriptorHeap(RtvSize);
+	mDescriptorHeap->CreateDsvDescriptorHeap(DsvSize);
 }
 
 void GraphicEngine::InitGPUCommand()
@@ -724,6 +724,8 @@ UpdateSubresources(mCommandList.Get(), defaultBuffer.Get(), uploadBuffer.Get(),
 	0, 0, num2DSubresources, &subResourceData);
 mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
 	D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+
+return defaultBuffer;
 }
 
 GraphicEngine* GetEngine()

@@ -9,9 +9,6 @@ cbuffer cbSsao : register(b0)
     float4x4 gProjTex;
 	float4   gOffsetVectors[14];
 
-    // For SsaoBlur.hlsl
-    //float4 gBlurWeights[3];
-
     float2 gInvRenderTargetSize;
 
     // Coordinates given in view space.
@@ -20,11 +17,6 @@ cbuffer cbSsao : register(b0)
     float    gOcclusionFadeEnd;
     float    gSurfaceEpsilon;
 };
-
-//cbuffer cbRootConstants : register(b1)
-//{
-    //bool gHorizontalBlur;
-//};
  
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gNormalMap    : register(t0);

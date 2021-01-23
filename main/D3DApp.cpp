@@ -141,20 +141,6 @@ void D3DApp::Update(const GameTimer& Timer)
 		CloseHandle(eventHandle);
 	}
 
-	//
-	// Animate the lights (and hence shadows).
-	//
-
-// 	mLightRotationAngle += 0.1f*Timer.DeltaTime();
-// 
-// 	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
-// 	for (int i = 0; i < 3; ++i)
-// 	{
-// 		XMVECTOR lightDir = XMLoadFloat3(&mBaseLightDirections[i]);
-// 		lightDir = XMVector3TransformNormal(lightDir, R);
-// 		XMStoreFloat3(&mRotatedLightDirections[i], lightDir);
-// 	}
-
 	mShadowMap->Update(Timer);
 	mSsao->Update(Timer);
 	UpdateFeatureCB(Timer);
@@ -204,10 +190,10 @@ void D3DApp::Draw(const GameTimer& Timer)
 // The root signature knows how many descriptors are expected in the table.
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	mShadowMap->DrawSceneToShadowMap();
+	//mShadowMap->DrawSceneToShadowMap();
 
-	mSsao->DrawNormalsAndDepth(mCommandList);
-	mSsao->ComputeSsao(mCommandList);
+	//mSsao->DrawNormalsAndDepth(mCommandList);
+	//mSsao->ComputeSsao(mCommandList);
 
 	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
 	GetEngine()->SetBaseRootSignature1();

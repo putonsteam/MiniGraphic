@@ -22,7 +22,7 @@ class GraphicEngine
 public:
 	GraphicEngine();
 	bool Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL level);
-	void InitDescriptorHeap(int size);
+	void InitDescriptorHeap(int Srvsize, int RtvSize, int DsvSize);
 	void Run();
 	void Update(const GameTimer& Timer);
 	void Flush();
