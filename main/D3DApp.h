@@ -34,8 +34,8 @@ private:
 	//XMFLOAT3 mRotatedLightDirections[3];
 	CD3DX12_GPU_DESCRIPTOR_HANDLE mNullSrv;
 	ComPtr<ID3D12PipelineState> mBasePSO;
-	ConstantFeature mFeatureCB;  // index 0 of pass cbuffer.
-	unique_ptr< ConstantBuffer<ConstantFeature> > FeatureCB;
+	CBFeature mFeatureCB;  // index 0 of pass cbuffer.
+	unique_ptr< ConstantBuffer<CBFeature> > mCBFeature;
 	Sky mSky;
 	ShadowMap* mShadowMap;
 	Ssao* mSsao;

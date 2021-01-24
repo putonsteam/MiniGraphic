@@ -11,14 +11,18 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 	m_D3DMinFeatureLevel = level;
 	InitDevice();
 	InitGPUCommand();
+
 	InitDescriptorHeap(10, SwapChainBufferCount + 2, 2);
 	InitDesHeap();
 	InitSwapchainAndRvt();
+	Flush();
 	InitDsv();
 	InitViewportAndScissor();
+	//ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+
 	mFrameResource = new FrameResource();
 	mFrameResource->Init();
-	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
+	mMainPassCB.AmbientLight = { 0.4f, 0.4f, 0.6f, 1.0f };
 	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
 	mMainPassCB.Lights[0].Strength = { 0.6f, 0.6f, 0.6f };
 	return true;
@@ -26,6 +30,21 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 
 bool GraphicEngine::InitDevice()
 {
+#if defined(_DEBUG)
+	// Enable the debug layer (requires the Graphics Tools "optional feature").
+	// NOTE: Enabling the debug layer after device creation will invalidate the active device.
+	{
+		ComPtr<ID3D12Debug> debugController;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+		{
+			debugController->EnableDebugLayer();
+
+			// Enable additional debug layers.
+			//dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+		}
+	}
+#endif
+
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_DxgiFactory)));
 
 	ComPtr<IDXGIAdapter1> adapter;
@@ -55,6 +74,11 @@ bool GraphicEngine::InitDevice()
 void GraphicEngine::SetPosition(float x, float y, float z)
 {
 	mCamera.SetPosition(x, y, z);
+}
+
+void GraphicEngine::SetLens(float fovY, float aspect, float zn, float zf)
+{
+	mCamera.SetLens(fovY, aspect, zn, zf);
 }
 
 void GraphicEngine::SetPosition(const XMFLOAT3& v)
@@ -211,7 +235,7 @@ void GraphicEngine::InitGPUCommand()
 	// Start off in a closed state.  This is because the first time we refer 
 	// to the command list we will Reset it, and it needs to be closed before
 	// calling Reset.
-	//mCommandList->Close();
+	mCommandList->Close();
 }
 
 void GraphicEngine::InitDesHeap()
@@ -260,6 +284,8 @@ void GraphicEngine::InitSwapchainAndRvt()
 
 void GraphicEngine::InitDsv()
 {
+	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+
 	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -296,7 +322,7 @@ void GraphicEngine::InitDsv()
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 	// Wait until resize is complete.
-	Flush();
+	SendCommandAndFulsh();
 }
 
 void GraphicEngine::InitViewportAndScissor()
@@ -334,7 +360,7 @@ void GraphicEngine::UpdateShaderParameter(const GameTimer& Timer)
 
 void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 {
-	ObjectCB->Update();
+	mCBPerObject->Update();
 	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
 		for (int j = 0; j != mRitemLayer[i].size(); ++j)
@@ -347,12 +373,12 @@ void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 				XMMATRIX world = XMLoadFloat4x4(&e->World);
 				XMMATRIX texTransform = XMLoadFloat4x4(&e->TexTransform);
 
-				ObjectConstants objConstants;
+				CBPerObject objConstants;
 				XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
 				XMStoreFloat4x4(&objConstants.TexTransform, XMMatrixTranspose(texTransform));
 				objConstants.MaterialIndex = e->Mat->MatCBIndex;
 
-				ObjectCB->Update(e->ObjCBIndex, objConstants);
+				mCBPerObject->Update(e->ObjCBIndex, objConstants);
 
 				// Next FrameResource need to be updated too.
 				e->NumFramesDirty--;
@@ -363,7 +389,7 @@ void GraphicEngine::UpdateObjectCBs(const GameTimer& Timer)
 
 void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 {
-	MaterialBuffer->Update();
+	mCBMaterial->Update();
 	for (int i = 0; i != (int)RenderLayer::Count; ++i)
 	{
 		for (int j = 0; j != mRitemLayer[i].size(); ++j)
@@ -378,7 +404,7 @@ void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 			{
 				XMMATRIX matTransform = XMLoadFloat4x4(&mat->MatTransform);
 
-				MaterialData matData;
+				CBMaterial matData;
 				matData.DiffuseAlbedo = mat->DiffuseAlbedo;
 				matData.FresnelR0 = mat->FresnelR0;
 				matData.Roughness = mat->Roughness;
@@ -386,7 +412,7 @@ void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 				matData.DiffuseMapIndex = mat->DiffuseSrvHeapIndex;
 				//matData.NormalMapIndex = mat->NormalSrvHeapIndex;
 
-				MaterialBuffer->Update(mat->MatCBIndex, matData);
+				mCBMaterial->Update(mat->MatCBIndex, matData);
 
 				// Next FrameResource need to be updated too.
 				//mat->NumFramesDirty--;
@@ -397,24 +423,25 @@ void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 
 void GraphicEngine::UpdateMainPassCB(const GameTimer& Timer)
 {
-	PassCB->Update();
-	XMMATRIX view = /*GetEngine()->*/GetCamera()->GetView();
-	XMMATRIX proj = /*GetEngine()->*/GetCamera()->GetProj();
-
+	mCBPerPass->Update();
+	XMMATRIX view = GetCamera()->GetView();
+	XMMATRIX proj = GetCamera()->GetProj();
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
-	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(view), view);
-	XMMATRIX invProj = XMMatrixInverse(&XMMatrixDeterminant(proj), proj);
-	XMMATRIX invViewProj = XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
 
+	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+	XMMATRIX T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
+	XMMATRIX viewProjTex = XMMatrixMultiply(viewProj, T);
+	XMStoreFloat4x4(&mMainPassCB.ViewProjTex, XMMatrixTranspose(viewProjTex));
+	XMStoreFloat4x4(&mMainPassCB.gView, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-	mMainPassCB.EyePosW = /*GetEngine()->*/GetCamera()->GetPosition3f();
+	mMainPassCB.EyePosW = GetCamera()->GetPosition3f();
 
-	//mMainPassCB.Lights[1].Direction = { -0.57735f, -0.57735f, 0.57735f };
-	//mMainPassCB.Lights[1].Strength = { 0.3f, 0.3f, 0.3f };
-	//mMainPassCB.Lights[2].Direction = { 0.0f, -0.707f, -0.707f };
-	//mMainPassCB.Lights[2].Strength = { 0.15f, 0.15f, 0.15f };
-
-	PassCB->Update(0, mMainPassCB);
+	mCBPerPass->Update(0, mMainPassCB);
 }
 
 void GraphicEngine::CreateShaderParameter()
@@ -427,9 +454,9 @@ void GraphicEngine::CreateShaderParameter()
 			count++;
 		}
 	}
-	PassCB = make_unique<ConstantBuffer<PassConstants>>(m_D3DDevice.Get(), 1, true);
-	ObjectCB = make_unique<ConstantBuffer<ObjectConstants>>(m_D3DDevice.Get(), count, true);
-	MaterialBuffer = make_unique<ConstantBuffer<MaterialData>>(m_D3DDevice.Get(), count, false);
+	mCBPerPass = make_unique<ConstantBuffer<CBPerPass>>(m_D3DDevice.Get(), 1, true);
+	mCBPerObject = make_unique<ConstantBuffer<CBPerObject>>(m_D3DDevice.Get(), count, true);
+	mCBMaterial = make_unique<ConstantBuffer<CBMaterial>>(m_D3DDevice.Get(), count, false);
 }
 
 void GraphicEngine::SetBaseRootSignature0()
@@ -439,12 +466,12 @@ void GraphicEngine::SetBaseRootSignature0()
 
 void GraphicEngine::SetBaseRootSignature1()
 {
-	mCommandList->SetGraphicsRootConstantBufferView(1, PassCB->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootConstantBufferView(1, mCBPerPass->Resource()->GetGPUVirtualAddress());
 }
 
-void GraphicEngine::SetBaseRootSignature2()
+void GraphicEngine::SetBaseRootSignature3()
 {
-	mCommandList->SetGraphicsRootShaderResourceView(2, MaterialBuffer->Resource()->GetGPUVirtualAddress());
+	mCommandList->SetGraphicsRootShaderResourceView(3, mCBMaterial->Resource()->GetGPUVirtualAddress());
 }
 
 void GraphicEngine::BuildBaseRootSignature()
@@ -453,24 +480,27 @@ void GraphicEngine::BuildBaseRootSignature()
 	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable1;
-	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 2, 0);
+	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0);
+
+	CD3DX12_DESCRIPTOR_RANGE texTable2;
+	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 2, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[6];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[7];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[0].InitAsConstantBufferView(0);
 	slotRootParameter[1].InitAsConstantBufferView(1);
-	slotRootParameter[2].InitAsShaderResourceView(0, 1);
-	slotRootParameter[3].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[4].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[5].InitAsConstantBufferView(2);
-
+	slotRootParameter[2].InitAsConstantBufferView(2);
+	slotRootParameter[3].InitAsShaderResourceView(0, 1);
+	slotRootParameter[4].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[5].InitAsDescriptorTable(1, &texTable2, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[6].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	auto staticSamplers = GetStaticSamplers();
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(6, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(7, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -572,7 +602,7 @@ void GraphicEngine::AddRenderItem(RenderLayer layer, unique_ptr<RenderItem>& ite
 void GraphicEngine::DrawRenderItems(RenderLayer layer/*ID3D12GraphicsCommandList* cmdList, *//*const std::vector<unique_ptr<RenderItem>>& ritems*/)
 {
 	const vector<unique_ptr<RenderItem>>& ritems = mRitemLayer[(int)layer];
-	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
+	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(CBPerObject));
 
 
 	// For each render item...
@@ -584,7 +614,7 @@ void GraphicEngine::DrawRenderItems(RenderLayer layer/*ID3D12GraphicsCommandList
 		mCommandList->IASetIndexBuffer(&ri->Geo->IndexBufferView());
 		mCommandList->IASetPrimitiveTopology(ri->PrimitiveType);
 
-		D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = ObjectCB->Resource()->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
+		D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = mCBPerObject->Resource()->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
 
 		mCommandList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 

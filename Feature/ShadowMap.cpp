@@ -69,7 +69,7 @@ ShadowMap::ShadowMap(UINT width, UINT height)
 	mSceneBounds.Center = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	mSceneBounds.Radius = sqrtf(10.0f*10.0f + 15.0f*15.0f);
 
-	PassCB = make_unique<ConstantBuffer<PassConstants>>(GetEngine()->GetDevice(), 1, true);
+	PassCB = make_unique<ConstantBuffer<CBPerPass>>(GetEngine()->GetDevice(), 1, true);
 	CreateShadowMapTex();
 	CreateDescriptors();
 	CreatePSO();
@@ -85,8 +85,6 @@ void ShadowMap::DrawSceneToShadowMap()
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mShadowMap.Get(),
 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-	
-
 	// Clear the back buffer and depth buffer.
 	mCommandList->ClearDepthStencilView(GetEngine()->GetDescriptorHeap()->GetDsvDescriptorCpuHandle(mShadowMapDsvIndex),
 		D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
@@ -95,7 +93,7 @@ void ShadowMap::DrawSceneToShadowMap()
 	// depth buffer.  Setting a null render target will disable color writes.
 	// Note the active PSO also must specify a render target count of 0.
 	mCommandList->OMSetRenderTargets(0, nullptr, false, &GetEngine()->GetDescriptorHeap()->GetDsvDescriptorCpuHandle(mShadowMapDsvIndex));
-	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstants));
+	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(CBPerPass));
 	// Bind the pass constant buffer for the shadow map pass.
 	D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = PassCB->Resource()->GetGPUVirtualAddress() + 0 * passCBByteSize;
 	mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);

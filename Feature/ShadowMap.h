@@ -30,11 +30,11 @@ private:
 	int mShadowMapDsvIndex;
 	int mShadowMapRsvIndex;
 
-	unique_ptr< ConstantBuffer<PassConstants> > PassCB;
+	unique_ptr< ConstantBuffer<CBPerPass> > PassCB;
 	XMFLOAT4X4 mLightView = MathHelper::Identity4x4();
 	XMFLOAT4X4 mLightProj = MathHelper::Identity4x4();
 	XMFLOAT4X4 mShadowTransform = MathHelper::Identity4x4();
-	PassConstants mShadowPassCB;// index 1 of pass cbuffer.
+	CBPerPass mShadowPassCB;// index 1 of pass cbuffer.
 	DirectX::BoundingSphere mSceneBounds;
 
 	float mLightNearZ = 0.0f;

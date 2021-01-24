@@ -30,6 +30,7 @@ public:
 	//camera
 	void SetPosition(float x, float y, float z);
 	void SetPosition(const XMFLOAT3& v);
+	void SetLens(float fovY, float aspect, float zn, float zf);
 	XMMATRIX GetView()const;
 	XMMATRIX GetProj()const;
 	XMVECTOR GetPosition()const;
@@ -58,6 +59,7 @@ public:
 	D3D12_VIEWPORT* GetViewport() { return &mScreenViewport; }
 	D3D12_RECT* GetScissor() { return &mScissorRect; }
 	IDXGISwapChain* GetSwapChain() { return mSwapChain.Get(); }
+	ID3D12Resource* GetDsBuffer() { return mDepthStencilBuffer.Get();}
 	LoadTexture* GetTextureList() { return &TextureList; }
 	DescriptorHeap* GetDescriptorHeap() { return mDescriptorHeap; }
 	ShaderState* GetShader() { return &mShader; }
@@ -93,7 +95,7 @@ public:
 
 	void SetBaseRootSignature0();
 	void SetBaseRootSignature1();
-	void SetBaseRootSignature2();
+	void SetBaseRootSignature3();
 
 	UINT mRtvDescriptorSize = 0;
 	UINT mDsvDescriptorSize = 0;
@@ -103,7 +105,11 @@ public:
 	DXGI_FORMAT mDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	int mClientWidth = 800;
 	int mClientHeight = 600;
-	PassConstants* GetMainPassCb() { return &mMainPassCB; }
+	CBPerPass* GetMainPassCb() { return &mMainPassCB; }
+	float AspectRatio()const
+	{
+		return static_cast<float>(mClientWidth) / mClientHeight;
+	}
 
 private:
 	bool InitDevice();
@@ -130,9 +136,7 @@ private:
 	ComPtr<IDXGISwapChain> mSwapChain;
 	int mCurrBackBufferIndex = 0;
 	ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
-	//ComPtr<ID3D12DescriptorHeap> mRtvHeap;
 
-	//ComPtr<ID3D12DescriptorHeap> mDsvHeap;
 	ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
 	D3D12_VIEWPORT mScreenViewport;
@@ -146,10 +150,10 @@ private:
 	FrameResource* mFrameResource;
 	POINT mLastMousePos;
 	GameTimer mTimer;
-	std::unique_ptr< ConstantBuffer<PassConstants> > PassCB;
-	std::unique_ptr< ConstantBuffer<ObjectConstants> > ObjectCB;
-	std::unique_ptr< ConstantBuffer<MaterialData> > MaterialBuffer;
-	PassConstants mMainPassCB;  // index 0 of pass cbuffer.
+	std::unique_ptr< ConstantBuffer<CBPerPass> > mCBPerPass;
+	std::unique_ptr< ConstantBuffer<CBPerObject> > mCBPerObject;
+	std::unique_ptr< ConstantBuffer<CBMaterial> > mCBMaterial;
+	CBPerPass mMainPassCB;  // index 0 of pass cbuffer.
 	std::vector<unique_ptr<RenderItem>> mRitemLayer[(int)RenderLayer::Count];
 	ComPtr<ID3D12RootSignature> mBaseRootSignature;
 

@@ -8,14 +8,18 @@
 bool D3DApp::Init(int Width, int Height, HWND wnd)
 {
 	GetEngine()->Init(Width, Height, wnd, D3D_FEATURE_LEVEL_11_0);
+	ThrowIfFailed(GetEngine()->GetCommandList()->Reset(GetEngine()->GetCommandAlloc(), nullptr));
 
 	GetEngine()->SetPosition(0.0f, 2.0f, -15.0f);
+	GetEngine()->SetLens(0.25f*MathHelper::Pi, GetEngine()->AspectRatio(), 1.0f, 1000.0f);
 
 	LoadRenderItem();
+	mCBFeature = make_unique<ConstantBuffer<CBFeature>>(GetEngine()->GetDevice(), 1, true);
 
 	mShadowMap = new ShadowMap(2048, 2048);
+	//GetEngine()->SendCommandAndFulsh();
+	//ThrowIfFailed(GetEngine()->GetCommandAlloc()->Reset());
 	mSsao = new Ssao(Width, Height);
-	FeatureCB = make_unique<ConstantBuffer<ConstantFeature>>(GetEngine()->GetDevice(), 1, true);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -149,10 +153,10 @@ void D3DApp::Update(const GameTimer& Timer)
 
 void D3DApp::UpdateFeatureCB(const GameTimer& Timer)
 {
-	FeatureCB->Update();
+	mCBFeature->Update();
 	XMMATRIX shadowTransform = XMLoadFloat4x4(&(mShadowMap->GetShadowTransform()));
 	XMStoreFloat4x4(&mFeatureCB.ShadowTransform, XMMatrixTranspose(shadowTransform));
-	FeatureCB->Update(0, mFeatureCB);
+	mCBFeature->Update(0, mFeatureCB);
 }
 
 void D3DApp::Draw(const GameTimer& Timer)
@@ -182,21 +186,28 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// from far away, so all objects will use the same cube map and we only need to set it once per-frame.  
 	// If we wanted to use "local" cube maps, we would have to change them per-object, or dynamically
 	// index into an array of cube maps.
-	//GetEngine()->SetBaseRootSignature1();
-	GetEngine()->SetBaseRootSignature2();
+	GetEngine()->SetBaseRootSignature3();
 
 	// Bind all the textures used in this scene.  Observe
 // that we only have to specify the first descriptor in the table.  
 // The root signature knows how many descriptors are expected in the table.
 	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	//mShadowMap->DrawSceneToShadowMap();
+	mShadowMap->DrawSceneToShadowMap();
 
-	//mSsao->DrawNormalsAndDepth(mCommandList);
-	//mSsao->ComputeSsao(mCommandList);
-
-	mCommandList->SetGraphicsRootDescriptorTable(3, mSky.GetSkyHeapStart());
 	GetEngine()->SetBaseRootSignature1();
+
+	mSsao->DrawNormalsAndDepth(mCommandList);
+	mSsao->ComputeSsao(mCommandList);
+
+	mCommandList->SetGraphicsRootSignature(GetEngine()->GetBaseRootSignature());
+	GetEngine()->SetBaseRootSignature1();
+	mCommandList->SetGraphicsRootConstantBufferView(2, mCBFeature->Resource()->GetGPUVirtualAddress());
+	GetEngine()->SetBaseRootSignature3();
+	mCommandList->SetGraphicsRootDescriptorTable(4, mSky.GetSkyHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(6, mSsao->GetSsaoSrvGpuHandle());
+
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -212,7 +223,6 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	// Specify the buffers we are going to render to.
 	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
-	mCommandList->SetGraphicsRootConstantBufferView(5, FeatureCB->Resource()->GetGPUVirtualAddress());
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
 
 	mSky.Draw(Timer);
