@@ -9,7 +9,7 @@ cbuffer cbSsao : register(b0)
     float4x4 gProjTex;
 	float4   gOffsetVectors[14];
 
-    float2 gInvRenderTargetSize;
+    //float2 gInvRenderTargetSize;
 
     // Coordinates given in view space.
     float    gOcclusionRadius;
@@ -115,7 +115,9 @@ float4 PS(VertexOut pin) : SV_Target
 
 	// Get viewspace normal and z-coord of this pixel.  
     float3 n = normalize(gNormalMap.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz);
+
     float pz = gDepthMap.SampleLevel(gsamDepthMap, pin.TexC, 0.0f).r;
+	float test = n.y;
     pz = NdcDepthToViewDepth(pz);
 
 	//
@@ -187,5 +189,5 @@ float4 PS(VertexOut pin) : SV_Target
 	float access = 1.0f - occlusionSum;
 
 	// Sharpen the contrast of the SSAO map to make the SSAO affect more dramatic.
-	return saturate(pow(access, 6.0f));
+	return occlusionSum;// saturate(pow(access, 6.0f));
 }

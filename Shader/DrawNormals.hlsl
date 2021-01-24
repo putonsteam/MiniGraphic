@@ -16,7 +16,6 @@ struct VertexOut
 {
 	float4 PosH     : SV_POSITION;
     float3 NormalW  : NORMAL;
-	float2 TexC     : TEXCOORD;
 };
 
 VertexOut VS(VertexIn vin)
@@ -33,37 +32,18 @@ VertexOut VS(VertexIn vin)
     float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
     vout.PosH = mul(posW, gViewProj);
 	
-	// Output vertex attributes for interpolation across triangle.
-	float4 texC = mul(float4(vin.TexC, 0.0f, 1.0f), gTexTransform);
-	vout.TexC = mul(texC, matData.MatTransform).xy;
-	
     return vout;
 }
 
 float4 PS(VertexOut pin) : SV_Target
 {
-	// Fetch the material data.
-	MaterialData matData = gMaterialData[gMaterialIndex];
-	float4 diffuseAlbedo = matData.DiffuseAlbedo;
-	uint diffuseMapIndex = matData.DiffuseMapIndex;
-	
-    // Dynamically look up the texture in the array.
-    diffuseAlbedo *= gDiffuseMap[diffuseMapIndex].Sample(gsamAnisotropicWrap, pin.TexC);
-
-#ifdef ALPHA_TEST
-    // Discard pixel if texture alpha < 0.1.  We do this test as soon 
-    // as possible in the shader so that we can potentially exit the
-    // shader early, thereby skipping the rest of the shader code.
-    clip(diffuseAlbedo.a - 0.1f);
-#endif
-
 	// Interpolating normal can unnormalize it, so renormalize it.
     pin.NormalW = normalize(pin.NormalW);
 	
     // NOTE: We use interpolated vertex normal for SSAO.
 
     // Write normal in view space coordinates
-	float3 normalV = pin.NormalW;// mul(pin.NormalW, (float3x3)gView);
+	float3 normalV = mul(pin.NormalW, (float3x3)gView);
     return float4(normalV, 0.0f);
 }
 
