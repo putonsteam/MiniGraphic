@@ -117,7 +117,6 @@ float4 PS(VertexOut pin) : SV_Target
     float3 n = normalize(gNormalMap.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz);
 
     float pz = gDepthMap.SampleLevel(gsamDepthMap, pin.TexC, 0.0f).r;
-	float test = n.y;
     pz = NdcDepthToViewDepth(pz);
 
 	//
@@ -189,5 +188,5 @@ float4 PS(VertexOut pin) : SV_Target
 	float access = 1.0f - occlusionSum;
 
 	// Sharpen the contrast of the SSAO map to make the SSAO affect more dramatic.
-	return occlusionSum;// saturate(pow(access, 6.0f));
+	return saturate(pow(access, 6.0f));
 }
