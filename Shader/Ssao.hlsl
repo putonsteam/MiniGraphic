@@ -9,8 +9,6 @@ cbuffer cbSsao : register(b0)
     float4x4 gProjTex;
 	float4   gOffsetVectors[14];
 
-    //float2 gInvRenderTargetSize;
-
     // Coordinates given in view space.
     float    gOcclusionRadius;
     float    gOcclusionFadeStart;

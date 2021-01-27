@@ -717,7 +717,7 @@ ThrowIfFailed(m_D3DDevice->CreateCommittedResource(
 	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 	D3D12_HEAP_FLAG_NONE,
 	&texDesc,
-	D3D12_RESOURCE_STATE_GENERIC_READ,
+	D3D12_RESOURCE_STATE_COMMON,
 	nullptr,
 	IID_PPV_ARGS(&defaultBuffer)));
 
@@ -749,7 +749,7 @@ subResourceData.SlicePitch = subResourceData.RowPitch * texDesc.Width;
 //
 
 mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
-	D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST));
+	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 UpdateSubresources(mCommandList.Get(), defaultBuffer.Get(), uploadBuffer.Get(),
 	0, 0, num2DSubresources, &subResourceData);
 mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),

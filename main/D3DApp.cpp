@@ -17,8 +17,6 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	mCBFeature = make_unique<ConstantBuffer<CBFeature>>(GetEngine()->GetDevice(), 1, true);
 
 	mShadowMap = new ShadowMap(2048, 2048);
-	//GetEngine()->SendCommandAndFulsh();
-	//ThrowIfFailed(GetEngine()->GetCommandAlloc()->Reset());
 	mSsao = new Ssao(Width, Height);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
