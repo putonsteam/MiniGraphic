@@ -192,3 +192,7 @@ Release/Util.obj
 Release/vc141.pdb
 Release/VulkanBase.obj
 Release/WindowsInput.obj
+SDEngine-master/document/ClassStructView.mdj
+SDEngine-master/document/GraphicsRenderPipeline.png
+SDEngine-master/document/GraphicsRenderPipeline.vsdx
+SDEngine-master/README.md
