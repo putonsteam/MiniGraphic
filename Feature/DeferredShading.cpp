@@ -43,6 +43,19 @@ void DeferredShading::CreateGBufferTexture()
 
 void DeferredShading::CreateGbufferView()
 {
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Format = mGbufferFormat;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.Texture2D.PlaneSlice = 0;
+	for (int i = 0; i < BUFFER_COUNT; ++i)
+	{
+		GetEngine()->GetDevice()->CreateRenderTargetView(mGBufferArray[i].Get(), &rtvDesc,
+			GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle());
+
+		mGBufferRtv[i] = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
+	}
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -56,19 +69,6 @@ void DeferredShading::CreateGbufferView()
 			GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
 		mGBufferSrv[i] = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 	}
-
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	rtvDesc.Format = mGbufferFormat;
-	rtvDesc.Texture2D.MipSlice = 0;
-	rtvDesc.Texture2D.PlaneSlice = 0;
-	for (int i = 0; i < BUFFER_COUNT; ++i)
-	{
-		GetEngine()->GetDevice()->CreateRenderTargetView(mGBufferArray[i].Get(), &rtvDesc,
-			GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle());
-
-		mGBufferRtv[i] = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
-	}
 }
 
 void DeferredShading::RenderGBuffer(ID3D12GraphicsCommandList* cmdList)
@@ -78,11 +78,11 @@ void DeferredShading::RenderGBuffer(ID3D12GraphicsCommandList* cmdList)
 	float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
 	for (int i = 0; i < BUFFER_COUNT; ++i)
 	{
-		D3D12_CPU_DESCRIPTOR_HANDLE GBufferView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mGBufferRtv[i]);
-		cmdList->ClearRenderTargetView(GBufferView, clearValue, 0, nullptr);
-
 		cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mGBufferArray[i].Get(),
 			D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+		D3D12_CPU_DESCRIPTOR_HANDLE GBufferView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mGBufferRtv[i]);
+		cmdList->ClearRenderTargetView(GBufferView, clearValue, 0, nullptr);
 	}
 
 	// Clear the screen normal map and depth buffer.
@@ -128,11 +128,13 @@ void DeferredShading::CreateGBufferPSO()
 	GbufferPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	GbufferPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	GbufferPsoDesc.SampleMask = UINT_MAX;
-	GbufferPsoDesc.NumRenderTargets = 1;
+	GbufferPsoDesc.NumRenderTargets = BUFFER_COUNT;
 	GbufferPsoDesc.DepthStencilState.DepthEnable = false;
 	GbufferPsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	GbufferPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	GbufferPsoDesc.RTVFormats[0] = mGbufferFormat;
+	GbufferPsoDesc.RTVFormats[1] = mGbufferFormat;
+	GbufferPsoDesc.RTVFormats[2] = mGbufferFormat;
 	GbufferPsoDesc.SampleDesc.Count = 1;
 	GbufferPsoDesc.SampleDesc.Quality = 0;
 	GbufferPsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
