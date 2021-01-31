@@ -14,7 +14,7 @@ template<class T>
 class ConstantBuffer
 {
 public:
-	ConstantBuffer() {};
+	//ConstantBuffer() {};
 	ConstantBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer);
 	~ConstantBuffer();
 	void Update(int elementIndex, const T& data);
@@ -53,7 +53,10 @@ ConstantBuffer<T>::ConstantBuffer(ID3D12Device* device, UINT elementCount, bool 
 template<class T>
 ConstantBuffer<T>::~ConstantBuffer()
 {
-
+	for (int i = 0; i != MAX_CONSTENT_BUFFER_SIZE; ++i)
+	{
+		CBuffer[i].release();
+	}
 }
 
 template<class T>

@@ -4,6 +4,10 @@
 #include "LoadTexture.h"
 #include "LoadMaterial.h"
 
+D3DApp::D3DApp()
+{
+	mCBFeature = nullptr;
+}
 
 bool D3DApp::Init(int Width, int Height, HWND wnd)
 {
@@ -18,6 +22,7 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 
 	mShadowMap = new ShadowMap(2048, 2048);
 	mSsao = new Ssao(Width, Height);
+	m_DeferredShading = new DeferredShading(Width, Height);
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -46,15 +51,11 @@ void D3DApp::LoadRenderItem()
 	skullRitem->TexTransform = MathHelper::Identity4x4();
 	skullRitem->ObjCBIndex = 0;
 	skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-//	skullRitem->StartIndexLocation = skull->StartIndexLocation;
-// 	skullRitem->BaseVertexLocation = skull->BaseVertexLocation;
 
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, skullRitem);
 
 	auto grid = std::make_unique<MeshInfo>();
-	// 
 	grid->CreateGrid(20.0f, 30.0f, 60, 40);
-	// 
 	auto gridRitem = std::make_unique<RenderItem>();
 	gridRitem->IndexCount = grid->IndexCount;
 
@@ -73,51 +74,11 @@ void D3DApp::LoadRenderItem()
 	gridRitem->Mat = move(tile0);
 	gridRitem->Geo = move(grid);
 	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	//gridRitem->StartIndexLocation = gridRitem->Geo->DrawArgs["grid"].StartIndexLocation;
-	//gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, gridRitem);
 
 	mSky.LoadRenderItem();
 	GetEngine()->CreateShaderParameter();
 
-	BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
-}
-
-void D3DApp::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
-{
-	ShaderState* shader = GetEngine()->GetShader();
-	ComPtr<ID3DBlob> vs = shader->CreateVSShader(vsFile);
-	ComPtr<ID3DBlob> ps = shader->CreatePSShader(psFile);
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
-
-	//
-	// PSO for opaque objects.
-	//
-	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	opaquePsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
-	opaquePsoDesc.pRootSignature = GetEngine()->GetBaseRootSignature();
-	opaquePsoDesc.VS =
-	{
-		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),
-		vs->GetBufferSize()
-	};
-	opaquePsoDesc.PS =
-	{
-		reinterpret_cast<BYTE*>(ps->GetBufferPointer()),
-		ps->GetBufferSize()
-	};
-	opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.SampleMask = UINT_MAX;
-	opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	opaquePsoDesc.NumRenderTargets = 1;
-	opaquePsoDesc.RTVFormats[0] = GetEngine()->mBackBufferFormat;
-	opaquePsoDesc.SampleDesc.Count = /*m4xMsaaState ? 4 : */1;
-	opaquePsoDesc.SampleDesc.Quality = /*m4xMsaaState ? (m4xMsaaQuality - 1) : */0;
-	opaquePsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
-	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mBasePSO)));
 }
 
 void D3DApp::Run()
@@ -168,12 +129,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
-	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mBasePSO.Get()));
-
-	// Bind the pass constant buffer for the shadow map pass.
-	//auto passCB = mCurrFrameResource->PassCB->Resource();
-	//D3D12_GPU_VIRTUAL_ADDRESS passCBAddress = passCB->GetGPUVirtualAddress() + 1 * passCBByteSize;
-	//mCommandList->SetGraphicsRootConstantBufferView(1, passCBAddress);
+	ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));// mBasePSO.Get()));
 
 	ID3D12DescriptorHeap* descriptorHeaps[] = { GetEngine()->GetSrvDescHeap() };
 	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
@@ -184,19 +140,16 @@ void D3DApp::Draw(const GameTimer& Timer)
 	// from far away, so all objects will use the same cube map and we only need to set it once per-frame.  
 	// If we wanted to use "local" cube maps, we would have to change them per-object, or dynamically
 	// index into an array of cube maps.
+	GetEngine()->SetBaseRootSignature1();
 	GetEngine()->SetBaseRootSignature3();
-
-	// Bind all the textures used in this scene.  Observe
-// that we only have to specify the first descriptor in the table.  
-// The root signature knows how many descriptors are expected in the table.
-	mCommandList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	mCommandList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	m_DeferredShading->RenderGBuffer(mCommandList);
 
 	mShadowMap->DrawSceneToShadowMap();
 
-	GetEngine()->SetBaseRootSignature1();
-
-	mSsao->DrawNormalsAndDepth(mCommandList);
-	mSsao->ComputeSsao(mCommandList);
+	//GetEngine()->SetBaseRootSignature1();
+	//mSsao->DrawNormalsAndDepth(mCommandList);
+	//mSsao->ComputeSsao(mCommandList);
 
 	mCommandList->SetGraphicsRootSignature(GetEngine()->GetBaseRootSignature());
 	GetEngine()->SetBaseRootSignature1();
@@ -205,23 +158,13 @@ void D3DApp::Draw(const GameTimer& Timer)
 	mCommandList->SetGraphicsRootDescriptorTable(4, mSky.GetSkyHeapStart());
 	mCommandList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 	mCommandList->SetGraphicsRootDescriptorTable(6, mSsao->GetSsaoSrvGpuHandle());
+	mCommandList->SetGraphicsRootDescriptorTable(7, m_DeferredShading->GetGBufferSrvGpuHandle());
 
 	// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	
-	mCommandList->SetPipelineState(mBasePSO.Get());
-
-	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
-	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
-
-	// Clear the back buffer and depth buffer.
-	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	// Specify the buffers we are going to render to.
-	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
-	GetEngine()->DrawRenderItems(RenderLayer::Opaque/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Opaque]*/);
+	m_DeferredShading->Render(mCommandList);
 
 	mSky.Draw(Timer);
 	//mCommandList->SetPipelineState(mSkyPSO.Get());

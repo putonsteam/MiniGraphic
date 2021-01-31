@@ -1,90 +1,71 @@
 // Include common HLSL code.
 #include "Common.hlsl"
 
-struct VertexIn
-{
-	float3 PosL    : POSITION;
-	float3 NormalL : NORMAL;
-	float2 TexC    : TEXCOORD;
-};
-
 struct VertexOut
 {
 	float4 PosH    : SV_POSITION;
-    float4 ShadowPosH : POSITION0;
-    float4 SsaoPosH   : POSITION1;
-	float3 PosW    : POSITION2;
-	float3 NormalW : NORMAL;
 	float2 TexC    : TEXCOORD;
 };
 
-VertexOut VS(VertexIn vin)
+static const float2 gTexCoords[6] =
 {
-	VertexOut vout = (VertexOut)0.0f;
+	float2(0.0f, 1.0f),
+	float2(0.0f, 0.0f),
+	float2(1.0f, 0.0f),
+	float2(0.0f, 1.0f),
+	float2(1.0f, 0.0f),
+	float2(1.0f, 1.0f)
+};
 
-	// Fetch the material data.
-	MaterialData matData = gMaterialData[gMaterialIndex];
+VertexOut VS(uint vid : SV_VertexID)
+{
+	VertexOut vout;
 
-	// Transform to world space.
-	float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
-	vout.PosW = posW.xyz;
+	vout.TexC = gTexCoords[vid];
 
-	// Assumes nonuniform scaling; otherwise, need to use inverse-transpose of world matrix.
-	vout.NormalW = mul(vin.NormalL, (float3x3)gWorld);
+	// Quad covering screen in NDC space.
+	vout.PosH = float4(2.0f*vout.TexC.x - 1.0f, 1.0f - 2.0f*vout.TexC.y, 0.0f, 1.0f);
 
-	// Transform to homogeneous clip space.
-	vout.PosH = mul(posW, gViewProj);
-
-    // Generate projective tex-coords to project SSAO map onto scene.
-    vout.SsaoPosH = mul(posW, gViewProjTex);
-	// Output vertex attributes for interpolation across triangle.
-	float4 texC = mul(float4(vin.TexC, 0.0f, 1.0f), gTexTransform);
-	vout.TexC = mul(texC, matData.MatTransform).xy;
-
-	vout.ShadowPosH = mul(posW, gShadowTransform);
 	return vout;
 }
 
 float4 PS(VertexOut pin) : SV_Target
 {
+	float3 worldPos = WorldPosTex.Sample(gsamLinearClamp, pin.TexC).xyz;
+	float3 worldNormal = WorldNormalTex.Sample(gsamLinearClamp, pin.TexC).xyz;
+	float4 diffuse = DiffuseTex.Sample(gsamLinearClamp, pin.TexC);
+
 	// Fetch the material data.
 	MaterialData matData = gMaterialData[gMaterialIndex];
-	float4 diffuseAlbedo = matData.DiffuseAlbedo;
+	float4 diffuseAlbedo = matData.DiffuseAlbedo * diffuse;
 	float3 fresnelR0 = matData.FresnelR0;
 	float  roughness = matData.Roughness;
-	uint diffuseTexIndex = matData.DiffuseMapIndex;
-
-	// Dynamically look up the texture in the array.
-	diffuseAlbedo *= gDiffuseMap[diffuseTexIndex].Sample(gsamAnisotropicWrap, pin.TexC);
-
-	// Interpolating normal can unnormalize it, so renormalize it.
-	pin.NormalW = normalize(pin.NormalW);
 
 	// Vector from point being lit to eye. 
-	float3 toEyeW = normalize(gEyePosW - pin.PosW);
+	float3 toEyeW = normalize(gEyePosW - worldPos);
 
     // Finish texture projection and sample SSAO map.
-    pin.SsaoPosH /= pin.SsaoPosH.w;
-    float ambientAccess = gSsaoMap.Sample(gsamLinearClamp, pin.SsaoPosH.xy, 0.0f).r;
+    //pin.SsaoPosH /= pin.SsaoPosH.w;
+    //float ambientAccess = gSsaoMap.Sample(gsamLinearClamp, pin.SsaoPosH.xy, 0.0f).r;
 
     // Light terms.
-    float4 ambient = ambientAccess*gAmbientLight*diffuseAlbedo;
+    float4 ambient = gAmbientLight*diffuseAlbedo;
 
     	// Only the first light casts a shadow.
     //float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);
     //shadowFactor[0] = CalcShadowFactor(pin.ShadowPosH);
-	float shadowFactor = CalcShadowFactor(pin.ShadowPosH);
+	float shadowFactor = 1.0f;// CalcShadowFactor(pin.ShadowPosH);
 	const float shininess = 1.0f - roughness;
 	Material mat = { diffuseAlbedo, fresnelR0, shininess };
-	float4 directLight = ComputeLighting(gLights, mat, pin.PosW,
-		pin.NormalW, toEyeW, shadowFactor);
+	float4 directLight = ComputeLighting(gLights, mat, worldPos,
+		worldNormal, toEyeW, shadowFactor);
 
 	float4 litColor = ambient + directLight;
 
 	// Add in specular reflections.
-	float3 r = reflect(-toEyeW, pin.NormalW);
+	float3 r = reflect(-toEyeW, worldNormal);
 	//float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
-	float3 fresnelFactor = SchlickFresnel(fresnelR0, pin.NormalW, r);
+	float3 fresnelFactor = SchlickFresnel(fresnelR0, worldNormal, r);
 	litColor.rgb += shininess * fresnelFactor;// *reflectionColor.rgb;
 	//litColor.rgb = shadowFactor
 	// Common convention to take alpha from diffuse albedo.

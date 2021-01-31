@@ -150,9 +150,9 @@ private:
 	FrameResource* mFrameResource;
 	POINT mLastMousePos;
 	GameTimer mTimer;
-	std::unique_ptr< ConstantBuffer<CBPerPass> > mCBPerPass;
-	std::unique_ptr< ConstantBuffer<CBPerObject> > mCBPerObject;
-	std::unique_ptr< ConstantBuffer<CBMaterial> > mCBMaterial;
+	std::unique_ptr< ConstantBuffer<CBPerPass> > mCBPerPass = nullptr;
+	std::unique_ptr< ConstantBuffer<CBPerObject> > mCBPerObject = nullptr;
+	std::unique_ptr< ConstantBuffer<CBMaterial> > mCBMaterial = nullptr;
 	CBPerPass mMainPassCB;  // index 0 of pass cbuffer.
 	std::vector<unique_ptr<RenderItem>> mRitemLayer[(int)RenderLayer::Count];
 	ComPtr<ID3D12RootSignature> mBaseRootSignature;
