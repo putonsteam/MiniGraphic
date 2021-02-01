@@ -135,6 +135,9 @@
     <ClInclude Include="Feature\Ssao.h">
       <Filter>Feature</Filter>
     </ClInclude>
+    <ClInclude Include="Feature\DeferredShading.h">
+      <Filter>Feature</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
@@ -204,6 +207,9 @@
       <Filter>Feature</Filter>
     </ClCompile>
     <ClCompile Include="Feature\Ssao.cpp">
+      <Filter>Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature\DeferredShading.cpp">
       <Filter>Feature</Filter>
     </ClCompile>
   </ItemGroup>
