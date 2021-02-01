@@ -485,7 +485,7 @@ void GraphicEngine::BuildBaseRootSignature()
 	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 2, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable3;
-	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 5, 0);
+	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 5, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[8];

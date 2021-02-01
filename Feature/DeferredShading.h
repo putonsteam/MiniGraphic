@@ -6,6 +6,7 @@ enum GBufferType
 	Diffuse,
 	Pos,
 	Normal,
+	Material,
 	Total,
 };
 

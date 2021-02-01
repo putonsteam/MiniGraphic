@@ -17,9 +17,10 @@ struct VertexOut
 
 struct PixelOut
 {
+	float4 diffuse:SV_Target1;
 	float4 worldPos:SV_Target2;
 	float4 worldNormal:SV_Target3;
-	float4 diffuse:SV_Target1;
+	float4 material:SV_Target4;
 };
 
 VertexOut VS(VertexIn vin)
@@ -52,8 +53,10 @@ PixelOut PS(VertexOut pin) : SV_Target
 	MaterialData matData = gMaterialData[gMaterialIndex];
 	uint diffuseTexIndex = matData.DiffuseMapIndex;
 
+	pixelOut.material = float4(matData.FresnelR0, matData.Roughness);
+
 	// Dynamically look up the texture in the array.
-	pixelOut.diffuse = gDiffuseMap[diffuseTexIndex].Sample(gsamAnisotropicWrap, pin.TexC);
+	pixelOut.diffuse = matData.DiffuseAlbedo * gDiffuseMap[diffuseTexIndex].Sample(gsamAnisotropicWrap, pin.TexC);
 
 	// Interpolating normal can unnormalize it, so renormalize it.
 	pixelOut.worldNormal = float4(normalize(pin.NormalW), 1.0f);

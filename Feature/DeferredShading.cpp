@@ -135,6 +135,7 @@ void DeferredShading::CreateGBufferPSO()
 	GbufferPsoDesc.RTVFormats[0] = mGbufferFormat;
 	GbufferPsoDesc.RTVFormats[1] = mGbufferFormat;
 	GbufferPsoDesc.RTVFormats[2] = mGbufferFormat;
+	GbufferPsoDesc.RTVFormats[3] = mGbufferFormat;
 	GbufferPsoDesc.SampleDesc.Count = 1;
 	GbufferPsoDesc.SampleDesc.Quality = 0;
 	GbufferPsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;

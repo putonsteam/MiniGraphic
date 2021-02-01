@@ -34,12 +34,11 @@ float4 PS(VertexOut pin) : SV_Target
 	float3 worldPos = WorldPosTex.Sample(gsamLinearClamp, pin.TexC).xyz;
 	float3 worldNormal = WorldNormalTex.Sample(gsamLinearClamp, pin.TexC).xyz;
 	float4 diffuse = DiffuseTex.Sample(gsamLinearClamp, pin.TexC);
+	float4 material = materialTex.Sample(gsamLinearClamp, pin.TexC);
 
 	// Fetch the material data.
-	MaterialData matData = gMaterialData[gMaterialIndex];
-	float4 diffuseAlbedo = matData.DiffuseAlbedo * diffuse;
-	float3 fresnelR0 = matData.FresnelR0;
-	float  roughness = matData.Roughness;
+	float3 fresnelR0 = material.xyz;
+	float  roughness = material.w;
 
 	// Vector from point being lit to eye. 
 	float3 toEyeW = normalize(gEyePosW - worldPos);
@@ -49,14 +48,14 @@ float4 PS(VertexOut pin) : SV_Target
     //float ambientAccess = gSsaoMap.Sample(gsamLinearClamp, pin.SsaoPosH.xy, 0.0f).r;
 
     // Light terms.
-    float4 ambient = gAmbientLight*diffuseAlbedo;
+    float4 ambient = gAmbientLight* diffuse;
 
     	// Only the first light casts a shadow.
     //float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);
     //shadowFactor[0] = CalcShadowFactor(pin.ShadowPosH);
 	float shadowFactor = 1.0f;// CalcShadowFactor(pin.ShadowPosH);
 	const float shininess = 1.0f - roughness;
-	Material mat = { diffuseAlbedo, fresnelR0, shininess };
+	Material mat = { diffuse, fresnelR0, shininess };
 	float4 directLight = ComputeLighting(gLights, mat, worldPos,
 		worldNormal, toEyeW, shadowFactor);
 
@@ -69,7 +68,7 @@ float4 PS(VertexOut pin) : SV_Target
 	litColor.rgb += shininess * fresnelFactor;// *reflectionColor.rgb;
 	//litColor.rgb = shadowFactor
 	// Common convention to take alpha from diffuse albedo.
-	litColor.a = diffuseAlbedo.a;
+	litColor.a = diffuse.a;
 
 	return litColor;
 }
