@@ -166,7 +166,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 	
 	m_DeferredShading->Render(mCommandList);
 
-	mSky.Draw(Timer);
+	//mSky.Draw(Timer);
 	//mCommandList->SetPipelineState(mSkyPSO.Get());
 	//GetEngine()->DrawRenderItems(RenderLayer::Sky/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Sky]*/);
 

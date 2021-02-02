@@ -75,6 +75,8 @@ void DeferredShading::RenderGBuffer(ID3D12GraphicsCommandList* cmdList)
 {
 	cmdList->RSSetViewports(1, GetEngine()->GetViewport());
 	cmdList->RSSetScissorRects(1, GetEngine()->GetScissor());
+
+	cmdList->SetPipelineState(mGBufferPSO.Get());
 	float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
 	for (int i = 0; i < BUFFER_COUNT; ++i)
 	{
@@ -88,12 +90,11 @@ void DeferredShading::RenderGBuffer(ID3D12GraphicsCommandList* cmdList)
 	// Clear the screen normal map and depth buffer.
 	D3D12_CPU_DESCRIPTOR_HANDLE GBufferView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mGBufferRtv[0]);
 
-	cmdList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	cmdList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// Specify the buffers we are going to render to.
 	cmdList->OMSetRenderTargets(BUFFER_COUNT, &GBufferView, true, &GetEngine()->DepthStencilView());
 
-	cmdList->SetPipelineState(mGBufferPSO.Get());
 
 	GetEngine()->DrawRenderItems(RenderLayer::Opaque);
 
@@ -129,8 +130,8 @@ void DeferredShading::CreateGBufferPSO()
 	GbufferPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	GbufferPsoDesc.SampleMask = UINT_MAX;
 	GbufferPsoDesc.NumRenderTargets = BUFFER_COUNT;
-	GbufferPsoDesc.DepthStencilState.DepthEnable = false;
-	GbufferPsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	//GbufferPsoDesc.DepthStencilState.DepthEnable = true;
+	//GbufferPsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	GbufferPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	GbufferPsoDesc.RTVFormats[0] = mGbufferFormat;
 	GbufferPsoDesc.RTVFormats[1] = mGbufferFormat;
@@ -169,6 +170,8 @@ void DeferredShading::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	opaquePsoDesc.DepthStencilState.DepthEnable = false;
+	//opaquePsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	opaquePsoDesc.SampleMask = UINT_MAX;
 	opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	opaquePsoDesc.NumRenderTargets = 1;
@@ -188,10 +191,10 @@ void DeferredShading::Render(ID3D12GraphicsCommandList* mCommandList)
 
 	// Clear the back buffer and depth buffer.
 	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	//mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	// Specify the buffers we are going to render to.
-	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
+	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
 
 	mCommandList->IASetVertexBuffers(0, 0, nullptr);
 	mCommandList->IASetIndexBuffer(nullptr);
