@@ -1,5 +1,6 @@
 cbuffer cbSsao : register(b0)
 {
+	float4x4 gView;
     float4x4 gProj;
     float4x4 gInvProj;
     float4x4 gProjTex;
@@ -13,7 +14,8 @@ cbuffer cbSsao : register(b0)
 };
  
 // Nonnumeric values cannot be added to a cbuffer.
-Texture2D gNormalMap    : register(t0);
+Texture2D WorldPosTex    : register(t0);
+Texture2D gNormalMap     : register(t1);
 Texture2D gDepthMap     : register(t1);
 Texture2D gRandomVecMap : register(t2);
 
@@ -119,8 +121,10 @@ float4 PS(VertexOut pin) : SV_Target
 	// p.z = t*pin.PosV.z
 	// t = p.z / pin.PosV.z
 	//
-	float3 p = (pz/pin.PosV.z)*pin.PosV;
-	
+	//float3 p = (pz/pin.PosV.z)*pin.PosV;
+	float3 p = WorldPosTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
+	p = mul(float4(p, 1.0f), gView).xyz;
+
 	// Extract random vector and map from [0,1] --> [-1, +1].
 	float3 randVec = 2.0f*gRandomVecMap.SampleLevel(gsamLinearWrap, 4.0f*pin.TexC, 0.0f).rgb - 1.0f;
 

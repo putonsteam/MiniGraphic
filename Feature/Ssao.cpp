@@ -19,10 +19,7 @@ Ssao::Ssao(UINT width, UINT height)
 
 
 	mCBSsao = make_unique<ConstantBuffer<CBSsao>>(GetEngine()->GetDevice(), 1, true);
-	CreateNormalTex();
-	CreateNormalDescriptors();
-	CreateDeptchDescriptors();
-	CreateNormalDepthPSO();
+	CreateDepthDescriptors();
 
 	CreateSsaoTex();
 	CreateSsaoDescriptors();
@@ -41,34 +38,7 @@ void Ssao::Update(const GameTimer& Timer)
 	UpdateSsaoCB(Timer);
 }
 
-void Ssao::CreateNormalTex()
-{
-	D3D12_RESOURCE_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
-	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	texDesc.Alignment = 0;
-	texDesc.Width = mWidth;
-	texDesc.Height = mHeight;
-	texDesc.DepthOrArraySize = 1;
-	texDesc.MipLevels = 1;
-	texDesc.Format = Ssao::NormalMapFormat;
-	texDesc.SampleDesc.Count = 1;
-	texDesc.SampleDesc.Quality = 0;
-	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
-
-	float normalClearColor[] = { 0.0f, 0.0f, 1.0f, 0.0f };
-	CD3DX12_CLEAR_VALUE optClear(NormalMapFormat, normalClearColor);
-	ThrowIfFailed(GetEngine()->GetDevice()->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&texDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		&optClear,
-		IID_PPV_ARGS(&mNormalMap)));
-}
-void Ssao::CreateDeptchDescriptors()
+void Ssao::CreateDepthDescriptors()
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -79,86 +49,6 @@ void Ssao::CreateDeptchDescriptors()
 
 	GetEngine()->GetDevice()->CreateShaderResourceView(GetEngine()->GetDsBuffer(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
 	mDepthSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
-}
-
-void Ssao::CreateNormalDescriptors()
-{
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Format = NormalMapFormat;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
-	GetEngine()->GetDevice()->CreateShaderResourceView(mNormalMap.Get(), &srvDesc, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
-	mNormalSrvIndex = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
-
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	rtvDesc.Format = NormalMapFormat;
-	rtvDesc.Texture2D.MipSlice = 0;
-	rtvDesc.Texture2D.PlaneSlice = 0;
-	GetEngine()->GetDevice()->CreateRenderTargetView(mNormalMap.Get(), &rtvDesc, GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle());
-	mNormalRtvIndex = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
-}
-
-void Ssao::DrawNormalsAndDepth(ID3D12GraphicsCommandList* cmdList)
-{
-	cmdList->RSSetViewports(1, GetEngine()->GetViewport());
-	cmdList->RSSetScissorRects(1, GetEngine()->GetScissor());
-
-	// Change to RENDER_TARGET.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mNormalMap.Get(),
-		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	// Clear the screen normal map and depth buffer.
-	float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
-	D3D12_CPU_DESCRIPTOR_HANDLE normalView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mNormalRtvIndex);
-	cmdList->ClearRenderTargetView(normalView, clearValue, 0, nullptr);
-	cmdList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	// Specify the buffers we are going to render to.
-	cmdList->OMSetRenderTargets(1, &normalView, true, &GetEngine()->DepthStencilView());
-
-	cmdList->SetPipelineState(mNormalDepPSO.Get());
-
-	GetEngine()->DrawRenderItems(RenderLayer::Opaque);
-
-	// Change back to GENERIC_READ so we can read the texture in a shader.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mNormalMap.Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
-}
-
-void Ssao::CreateNormalDepthPSO()
-{
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC drawNormalsPsoDesc;
-
-	ZeroMemory(&drawNormalsPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	ShaderState* shader = GetEngine()->GetShader();
-	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\DrawNormals.hlsl");
-	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\DrawNormals.hlsl");
-	drawNormalsPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
-	drawNormalsPsoDesc.pRootSignature = GetEngine()->GetBaseRootSignature();
-	drawNormalsPsoDesc.VS =
-	{
-		reinterpret_cast<BYTE*>(vs->GetBufferPointer()),
-		vs->GetBufferSize()
-	};
-	drawNormalsPsoDesc.PS =
-	{
-		reinterpret_cast<BYTE*>(ps->GetBufferPointer()),
-		ps->GetBufferSize()
-	};
-	drawNormalsPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	drawNormalsPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	drawNormalsPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	drawNormalsPsoDesc.SampleMask = UINT_MAX;
-	drawNormalsPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	drawNormalsPsoDesc.NumRenderTargets = 1;
-	drawNormalsPsoDesc.RTVFormats[0] = NormalMapFormat;
-	drawNormalsPsoDesc.SampleDesc.Count = 1;
-	drawNormalsPsoDesc.SampleDesc.Quality = 0;
-	drawNormalsPsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
-	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&drawNormalsPsoDesc, IID_PPV_ARGS(&mNormalDepPSO)));
 }
 
 void Ssao::CreateSsaoPSO()
@@ -208,14 +98,18 @@ void Ssao::BuildSsaoRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE texTable2;
 	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
 
+	CD3DX12_DESCRIPTOR_RANGE texTable3;
+	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0);
+
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[5];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
 	slotRootParameter[0].InitAsConstantBufferView(0);
 	slotRootParameter[1].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
 	slotRootParameter[2].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
 	slotRootParameter[3].InitAsDescriptorTable(1, &texTable2, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[4].InitAsDescriptorTable(1, &texTable3, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
 		0, // shaderRegister
@@ -255,7 +149,7 @@ void Ssao::BuildSsaoRootSignature()
 	};
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(5, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -300,12 +194,11 @@ void Ssao::ComputeSsao(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetGraphicsRootSignature(mSsaoRootSignature.Get());
 	auto ssaoCBAddress = mCBSsao->Resource()->GetGPUVirtualAddress();
 	cmdList->SetGraphicsRootConstantBufferView(0, ssaoCBAddress);
-	// Bind the normal and depth maps.
-	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDepthSrvIndex));
 
-	// Bind the random vector map.
-	cmdList->SetGraphicsRootDescriptorTable(3, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mRandomVectorSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(3, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDepthSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mRandomVectorSrvIndex));
 
 	cmdList->SetPipelineState(mSsaoPSO.Get());
 
