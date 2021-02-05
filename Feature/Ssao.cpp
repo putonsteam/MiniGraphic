@@ -375,6 +375,7 @@ void Ssao::UpdateSsaoCB(const GameTimer& Timer)
 {
 	mCBSsao->Update();
 
+	XMMATRIX view = GetEngine()->GetView();
 	XMMATRIX proj = GetEngine()->GetProj();
 
 	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
@@ -384,6 +385,7 @@ void Ssao::UpdateSsaoCB(const GameTimer& Timer)
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
+	XMStoreFloat4x4(&ssaoCB.gView, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&ssaoCB.Proj, XMMatrixTranspose(proj));
 	XMStoreFloat4x4(&ssaoCB.InvProj, XMMatrixTranspose(XMMatrixInverse(&XMMatrixDeterminant(proj), proj)));
 	XMStoreFloat4x4(&ssaoCB.ProjTex, XMMatrixTranspose(proj*T));

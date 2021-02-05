@@ -4,6 +4,7 @@
 
 struct CBSsao
 {
+	DirectX::XMFLOAT4X4 gView = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 Proj;
 	DirectX::XMFLOAT4X4 InvProj;
 	DirectX::XMFLOAT4X4 ProjTex;
