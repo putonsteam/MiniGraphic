@@ -39,7 +39,7 @@ static const float2 gTexCoords[6] =
 struct VertexOut
 {
     float4 PosH : SV_POSITION;
-    float3 PosV : POSITION;
+
 	float2 TexC : TEXCOORD0;
 };
 
@@ -51,10 +51,6 @@ VertexOut VS(uint vid : SV_VertexID)
 
     // Quad covering screen in NDC space.
     vout.PosH = float4(2.0f*vout.TexC.x - 1.0f, 1.0f - 2.0f*vout.TexC.y, 0.0f, 1.0f);
- 
-    // Transform quad corners to view space near plane.
-    float4 ph = mul(vout.PosH, gInvProj);
-    vout.PosV = ph.xyz / ph.w;
 
     return vout;
 }
@@ -116,13 +112,6 @@ float4 PS(VertexOut pin) : SV_Target
     float pz = gDepthMap.SampleLevel(gsamDepthMap, pin.TexC, 0.0f).r;
     pz = NdcDepthToViewDepth(pz);
 
-	//
-	// Reconstruct full view space position (x,y,z).
-	// Find t such that p = t*pin.PosV.
-	// p.z = t*pin.PosV.z
-	// t = p.z / pin.PosV.z
-	//
-	//float3 p = (pz/pin.PosV.z)*pin.PosV;
 	float3 p = WorldPosTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
 	p = mul(float4(p, 1.0f), gView).xyz;
 

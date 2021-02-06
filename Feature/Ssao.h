@@ -40,11 +40,9 @@ public:
 private:
 	UINT mWidth;
 	UINT mHeight;
-	ComPtr<ID3D12Resource> mNormalMap = nullptr;
 	ComPtr<ID3D12Resource> mSsaoMap = nullptr;
 	ComPtr<ID3D12Resource> mRandomVectorMap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> mRandomVectorMapUploadBuffer;
-	static const DXGI_FORMAT NormalMapFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	static const DXGI_FORMAT AmbientMapFormat = DXGI_FORMAT_R16_UNORM;
 	int mNormalSrvIndex;
 	int mWPosSrvIndex;
@@ -54,7 +52,6 @@ private:
 	int mDepthSrvIndex;
 
 	ComPtr<ID3D12RootSignature> mSsaoRootSignature;
-	ComPtr<ID3D12PipelineState> mNormalDepPSO;
 	ComPtr<ID3D12PipelineState> mSsaoPSO;
 	unique_ptr< ConstantBuffer<CBSsao> > mCBSsao;
 	CBSsao ssaoCB;
