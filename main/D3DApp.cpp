@@ -147,8 +147,6 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	mShadowMap->DrawSceneToShadowMap();
 
-	//GetEngine()->SetBaseRootSignature1();
-	//mSsao->DrawNormalsAndDepth(mCommandList);
 	mSsao->SetNormalSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Normal));
 	mSsao->SetWPosSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Pos));
 	mSsao->ComputeSsao(mCommandList);

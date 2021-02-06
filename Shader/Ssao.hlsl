@@ -16,8 +16,8 @@ cbuffer cbSsao : register(b0)
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D WorldPosTex    : register(t0);
 Texture2D gNormalMap     : register(t1);
-Texture2D gDepthMap     : register(t1);
-Texture2D gRandomVecMap : register(t2);
+Texture2D gDepthMap     : register(t2);
+Texture2D gRandomVecMap : register(t3);
 
 SamplerState gsamPointClamp : register(s0);
 SamplerState gsamLinearClamp : register(s1);
@@ -111,6 +111,7 @@ float4 PS(VertexOut pin) : SV_Target
 
 	// Get viewspace normal and z-coord of this pixel.  
     float3 n = normalize(gNormalMap.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz);
+	n = mul(n, (float3x3)gView);
 
     float pz = gDepthMap.SampleLevel(gsamDepthMap, pin.TexC, 0.0f).r;
     pz = NdcDepthToViewDepth(pz);

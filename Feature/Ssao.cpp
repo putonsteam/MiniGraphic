@@ -10,12 +10,12 @@ Ssao::Ssao(UINT width, UINT height)
 
 	mViewport.TopLeftX = 0.0f;
 	mViewport.TopLeftY = 0.0f;
-	mViewport.Width = mWidth / 2.0f;
-	mViewport.Height = mHeight / 2.0f;
+	mViewport.Width = mWidth;
+	mViewport.Height = mHeight;
 	mViewport.MinDepth = 0.0f;
 	mViewport.MaxDepth = 1.0f;
 
-	mScissorRect = { 0, 0, (int)mWidth / 2, (int)mHeight / 2 };
+	mScissorRect = { 0, 0, (long)mWidth, (long)mHeight };
 
 
 	mCBSsao = make_unique<ConstantBuffer<CBSsao>>(GetEngine()->GetDevice(), 1, true);
@@ -221,8 +221,8 @@ void Ssao::CreateSsaoTex()
 	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	texDesc.Alignment = 0;
 	// Ambient occlusion maps are at half resolution.
-	texDesc.Width = mWidth / 2;
-	texDesc.Height = mHeight / 2;
+	texDesc.Width = mWidth;
+	texDesc.Height = mHeight;
 	texDesc.DepthOrArraySize = 1;
 	texDesc.MipLevels = 1;
 	texDesc.SampleDesc.Count = 1;
