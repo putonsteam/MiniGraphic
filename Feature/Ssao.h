@@ -4,6 +4,7 @@
 
 struct CBSsao
 {
+	DirectX::XMFLOAT4X4 gView = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 Proj;
 	DirectX::XMFLOAT4X4 InvProj;
 	DirectX::XMFLOAT4X4 ProjTex;
@@ -20,11 +21,7 @@ class Ssao
 {
 public:
 	Ssao(UINT width, UINT height);
-	void CreateNormalTex();
-	void CreateNormalDescriptors();
-	void CreateDeptchDescriptors();
-	void DrawNormalsAndDepth(ID3D12GraphicsCommandList* cmdList);
-	void CreateNormalDepthPSO();
+	void CreateDepthDescriptors();
 	void BuildSsaoRootSignature();
 	void CreateSsaoPSO();
 	void CreateSsaoTex();
@@ -37,6 +34,8 @@ public:
 	void BuildOffsetVectors();
 	void InitSsaoCb();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetSsaoSrvGpuHandle();
+	void SetNormalSrvIndex(int value) { mNormalSrvIndex = value; };
+	void SetWPosSrvIndex(int value) { mWPosSrvIndex = value; };
 
 private:
 	UINT mWidth;
@@ -47,8 +46,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> mRandomVectorMapUploadBuffer;
 	static const DXGI_FORMAT NormalMapFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	static const DXGI_FORMAT AmbientMapFormat = DXGI_FORMAT_R16_UNORM;
-	int mNormalRtvIndex;
 	int mNormalSrvIndex;
+	int mWPosSrvIndex;
 	int mRandomVectorSrvIndex;
 	int mSsaoSrvIndex;
 	int mSsaoRtvIndex;

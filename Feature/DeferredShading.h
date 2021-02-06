@@ -23,6 +23,7 @@ public:
 	void BuildPSO(const wchar_t* vsFile, const wchar_t* psFile);
 	void Render(ID3D12GraphicsCommandList* mCommandList);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGBufferSrvGpuHandle();
+	int GetGBufferSrv(GBufferType type) { return mGBufferSrv[type]; }
 
 private:
 	int mTextureWidth;
