@@ -98,5 +98,6 @@ void Sky::Draw(const GameTimer& Timer)
 {
 	auto mCommandList = GetEngine()->GetCommandList();
 	mCommandList->SetPipelineState(mSkyPSO.Get());
-	GetEngine()->DrawRenderItems(RenderLayer::Sky/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Sky]*/);
+	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
+	GetEngine()->DrawRenderItems(RenderLayer::Sky);
 }

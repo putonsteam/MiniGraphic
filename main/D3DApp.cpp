@@ -149,7 +149,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	//GetEngine()->SetBaseRootSignature1();
 	//mSsao->DrawNormalsAndDepth(mCommandList);
-	//mSsao->ComputeSsao(mCommandList);
+	mSsao->ComputeSsao(mCommandList);
 
 	mCommandList->SetGraphicsRootSignature(GetEngine()->GetBaseRootSignature());
 	GetEngine()->SetBaseRootSignature1();
@@ -166,9 +166,7 @@ void D3DApp::Draw(const GameTimer& Timer)
 	
 	m_DeferredShading->Render(mCommandList);
 
-	//mSky.Draw(Timer);
-	//mCommandList->SetPipelineState(mSkyPSO.Get());
-	//GetEngine()->DrawRenderItems(RenderLayer::Sky/*mCommandList, *//*mRitemLayer[(int)RenderLayer::Sky]*/);
+	mSky.Draw(Timer);
 
 		// Indicate a state transition on the resource usage.
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),

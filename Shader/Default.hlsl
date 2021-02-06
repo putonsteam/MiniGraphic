@@ -50,10 +50,7 @@ float4 PS(VertexOut pin) : SV_Target
     // Light terms.
     float4 ambient = gAmbientLight* diffuse;
 
-    	// Only the first light casts a shadow.
-    //float3 shadowFactor = float3(1.0f, 1.0f, 1.0f);
-    //shadowFactor[0] = CalcShadowFactor(pin.ShadowPosH);
-	float shadowFactor = 1.0f;// CalcShadowFactor(pin.ShadowPosH);
+	float shadowFactor = CalcShadowFactor(mul(float4(worldPos, 1.0f), gShadowTransform));
 	const float shininess = 1.0f - roughness;
 	Material mat = { diffuse, fresnelR0, shininess };
 	float4 directLight = ComputeLighting(gLights, mat, worldPos,
@@ -66,7 +63,7 @@ float4 PS(VertexOut pin) : SV_Target
 	//float4 reflectionColor = gCubeMap.Sample(gsamLinearWrap, r);
 	float3 fresnelFactor = SchlickFresnel(fresnelR0, worldNormal, r);
 	litColor.rgb += shininess * fresnelFactor;// *reflectionColor.rgb;
-	//litColor.rgb = shadowFactor
+
 	// Common convention to take alpha from diffuse albedo.
 	litColor.a = diffuse.a;
 

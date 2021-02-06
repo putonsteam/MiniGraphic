@@ -139,7 +139,7 @@ void DeferredShading::CreateGBufferPSO()
 	GbufferPsoDesc.RTVFormats[3] = mGbufferFormat;
 	GbufferPsoDesc.SampleDesc.Count = 1;
 	GbufferPsoDesc.SampleDesc.Quality = 0;
-	GbufferPsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+	GbufferPsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
 	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&GbufferPsoDesc, IID_PPV_ARGS(&mGBufferPSO)));
 }
 
@@ -178,7 +178,7 @@ void DeferredShading::BuildPSO(const wchar_t* vsFile, const wchar_t* psFile)
 	opaquePsoDesc.RTVFormats[0] = GetEngine()->mBackBufferFormat;
 	opaquePsoDesc.SampleDesc.Count = /*m4xMsaaState ? 4 : */1;
 	opaquePsoDesc.SampleDesc.Quality = /*m4xMsaaState ? (m4xMsaaQuality - 1) : */0;
-	opaquePsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
+	opaquePsoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;
 	ThrowIfFailed(GetEngine()->GetDevice()->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mBasePSO)));
 }
 
