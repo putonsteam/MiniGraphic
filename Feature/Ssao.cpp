@@ -17,7 +17,6 @@ Ssao::Ssao(UINT width, UINT height)
 
 	mScissorRect = { 0, 0, (long)mWidth, (long)mHeight };
 
-
 	mCBSsao = make_unique<ConstantBuffer<CBSsao>>(GetEngine()->GetDevice(), 1, true);
 	CreateDepthDescriptors();
 
