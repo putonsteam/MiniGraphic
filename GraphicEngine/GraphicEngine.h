@@ -85,7 +85,6 @@ public:
 	void DrawRenderItems(RenderLayer layer/*ID3D12GraphicsCommandList* cmdList, *//*const std::vector<unique_ptr<RenderItem>>& ritems*/);
 	void UpdateObjectCBs(const GameTimer& Timer);
 	void UpdateMaterialBuffer(const GameTimer& Timer);
-	//void UpdateShadowTransform(const GameTimer& Timer);
 	void UpdateMainPassCB(const GameTimer& Timer);
 	void UpdateShaderParameter(const GameTimer& Timer);
 	void CreateShaderParameter();

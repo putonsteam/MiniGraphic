@@ -2,13 +2,14 @@ cbuffer cbNeverChanges : register(b0)
 {
 	float4x4 gView;
 	float4x4 gProjection;
+	float2 Dimensions;
 	float FarClip;
-	float4 Dimensions;
 };
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D WorldPosTex    : register(t0);
 Texture2D gNormalMap     : register(t1);
+Texture2D DeferredTex    : register(t2);
 
 SamplerState gsamPointClamp : register(s0);
 SamplerState gsamLinearClamp : register(s1);
@@ -44,6 +45,7 @@ VertexOut VS(uint vid : SV_VertexID)
 
     return vout;
 }
+
 float2 NormalizedDeviceCoordToScreenCoord(float2 ndc)
 {
 	float2 screenCoord;
@@ -52,19 +54,20 @@ float2 NormalizedDeviceCoordToScreenCoord(float2 ndc)
 	return screenCoord;
 }
 
-float4 PS(VertexOut input) : SV_TARGET
+float4 PS(VertexOut pin) : SV_TARGET
 {
 	// Get viewspace normal and z-coord of this pixel.  
 	float3 n = normalize(gNormalMap.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz);
 
 	float3 p = WorldPosTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
-	p = mul(float4(p, 1.0f), gView).xyz;
 
 	float3 ref = normalize(reflect(p, n));
 	ref = mul(float4(ref, 1.0f), gView).xyz;
 
-   int2 coord;
-   int2 origin = input.TexC * Dimensions;
+	p = mul(float4(p, 1.0f), gView).xyz;
+
+   float2 coord;
+   float2 origin = pin.TexC * Dimensions;
    float t = 1;
    float4 reflRay = float4(ref, 1.0f);
    float4 reflColor = float4(0, 0, 0, 0);
@@ -98,7 +101,7 @@ float4 PS(VertexOut input) : SV_TARGET
    float2 traceDir = (p1 - p0) / divisions;
 
    float maxSteps = min(MAX_STEPS, divisions);
-   if (reflectivity > 0.0f)
+   //if (reflectivity > 0.0f)
    {
 	   while (t < maxSteps)
 	   {
@@ -107,11 +110,11 @@ float4 PS(VertexOut input) : SV_TARGET
 
 		  float curDepth = (v0 + dV * t).z;
 		  curDepth /= k0 + dK * t; // Reverse the perspective divide back to view space
-		  float3 q = WorldPosTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
+		  float3 q = WorldPosTex.SampleLevel(gsamPointClamp, coord, 0.0f).xyz;
 		  float storedDepth = mul(float4(p, 1.0f), gView).z;
 		  if (curDepth > storedDepth && curDepth - storedDepth < MAX_INTERSECT_DIST)
 		  {
-			 reflColor = renderTx[coord];
+			 reflColor = DeferredTex[coord];
 			 break;
 		  }
 		  t++;

@@ -12,7 +12,7 @@ bool GraphicEngine::Init(int Width, int Height, HWND wnd, D3D_FEATURE_LEVEL leve
 	InitDevice();
 	InitGPUCommand();
 
-	InitDescriptorHeap(20, SwapChainBufferCount + 10, 2);
+	InitDescriptorHeap(20, SwapChainBufferCount + 20, 10);
 	InitDesHeap();
 	InitSwapchainAndRvt();
 	Flush();

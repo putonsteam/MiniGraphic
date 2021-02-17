@@ -1,9 +1,10 @@
 #include "Ssr.h"
 #include <DirectXPackedVector.h>
+#include "PostProcess.h"
 
 using namespace DirectX::PackedVector;
 
-Ssr::Ssr(UINT width, UINT height)
+Ssr::Ssr(UINT width, UINT height, float farPlane)
 {
 	mWidth = width;
 	mHeight = height;
@@ -17,15 +18,13 @@ Ssr::Ssr(UINT width, UINT height)
 
 	mScissorRect = { 0, 0, (long)mWidth, (long)mHeight };
 
-	mCBSsr = make_unique<ConstantBuffer<CBSsr>>(GetEngine()->GetDevice(), 1, true);
-
 	CreateSsrTex();
 	CreateSsrDescriptors();
 
 	BuildSsrRootSignature();
 	CreateSsrPSO();
 
-	InitSsrCb();
+	InitSsrCb(farPlane);
 }
 
 void Ssr::Update(const GameTimer& Timer)
@@ -77,13 +76,17 @@ void Ssr::BuildSsrRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE texTable1;
 	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, 0);
 
+	CD3DX12_DESCRIPTOR_RANGE texTable2;
+	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
+
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[4];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsConstantBufferView(0);
-	slotRootParameter[1].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[2].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[0].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[1].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[2].InitAsDescriptorTable(1, &texTable2, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[3].InitAsConstantBufferView(0);
 
 	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
 		0, // shaderRegister
@@ -123,7 +126,7 @@ void Ssr::BuildSsrRootSignature()
 	};
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -146,7 +149,7 @@ void Ssr::BuildSsrRootSignature()
 		IID_PPV_ARGS(mSsrRootSignature.GetAddressOf())));
 }
 
-void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList)
+void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProcess)
 {
 	cmdList->RSSetViewports(1, &mViewport);
 	cmdList->RSSetScissorRects(1, &mScissorRect);
@@ -167,10 +170,7 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList)
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsrRootSignature.Get());
 	auto SsrCBAddress = mCBSsr->Resource()->GetGPUVirtualAddress();
-	cmdList->SetGraphicsRootConstantBufferView(0, SsrCBAddress);
-
-	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
+	cmdList->SetGraphicsRootConstantBufferView(3, SsrCBAddress);
 
 	cmdList->SetPipelineState(mSsrPSO.Get());
 
@@ -237,9 +237,12 @@ void Ssr::CreateSsrDescriptors()
 	mSsrRtvIndex = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
 }
 
-void Ssr::InitSsrCb()
+void Ssr::InitSsrCb(float farPlane)
 {
+	mCBSsr = make_unique<ConstantBuffer<CBSsr>>(GetEngine()->GetDevice(), 1, true);
 
+	SsrCB.FarClip = farPlane;
+	SsrCB.Dimensions = { (float)mWidth, (float)mHeight };
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE Ssr::GetSsrSrvGpuHandle()
@@ -254,17 +257,8 @@ void Ssr::UpdateSsrCB(const GameTimer& Timer)
 	XMMATRIX view = GetEngine()->GetView();
 	XMMATRIX proj = GetEngine()->GetProj();
 
-	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
-	XMMATRIX T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-
 	XMStoreFloat4x4(&SsrCB.gView, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&SsrCB.Proj, XMMatrixTranspose(proj));
-	XMStoreFloat4x4(&SsrCB.InvProj, XMMatrixTranspose(XMMatrixInverse(&XMMatrixDeterminant(proj), proj)));
-	XMStoreFloat4x4(&SsrCB.ProjTex, XMMatrixTranspose(proj*T));
 
 	mCBSsr->Update(0, SsrCB);
 }

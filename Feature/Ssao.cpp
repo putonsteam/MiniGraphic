@@ -1,5 +1,6 @@
 #include "Ssao.h"
 #include <DirectXPackedVector.h>
+#include "PostProcess.h"
 
 using namespace DirectX::PackedVector;
 
@@ -100,15 +101,19 @@ void Ssao::BuildSsaoRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE texTable3;
 	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0);
 
+	CD3DX12_DESCRIPTOR_RANGE texTable4;
+	texTable4.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0);
+
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[5];
+	CD3DX12_ROOT_PARAMETER slotRootParameter[6];
 
 	// Perfomance TIP: Order from most frequent to least frequent.
-	slotRootParameter[0].InitAsConstantBufferView(0);
-	slotRootParameter[1].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[2].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
-	slotRootParameter[3].InitAsDescriptorTable(1, &texTable2, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[0].InitAsDescriptorTable(1, &texTable0, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[1].InitAsDescriptorTable(1, &texTable1, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[2].InitAsDescriptorTable(1, &texTable2, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[3].InitAsConstantBufferView(0);
 	slotRootParameter[4].InitAsDescriptorTable(1, &texTable3, D3D12_SHADER_VISIBILITY_PIXEL);
+	slotRootParameter[5].InitAsDescriptorTable(1, &texTable4, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	const CD3DX12_STATIC_SAMPLER_DESC pointClamp(
 		0, // shaderRegister
@@ -148,7 +153,7 @@ void Ssao::BuildSsaoRootSignature()
 	};
 
 	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(5, slotRootParameter,
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(6, slotRootParameter,
 		(UINT)staticSamplers.size(), staticSamplers.data(),
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -171,7 +176,7 @@ void Ssao::BuildSsaoRootSignature()
 		IID_PPV_ARGS(mSsaoRootSignature.GetAddressOf())));
 }
 
-void Ssao::ComputeSsao(ID3D12GraphicsCommandList* cmdList)
+void Ssao::ComputeSsao(ID3D12GraphicsCommandList* cmdList, PostProcess* postProcess)
 {
 	cmdList->RSSetViewports(1, &mViewport);
 	cmdList->RSSetScissorRects(1, &mScissorRect);
@@ -192,12 +197,13 @@ void Ssao::ComputeSsao(ID3D12GraphicsCommandList* cmdList)
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsaoRootSignature.Get());
 	auto ssaoCBAddress = mCBSsao->Resource()->GetGPUVirtualAddress();
-	cmdList->SetGraphicsRootConstantBufferView(0, ssaoCBAddress);
+	cmdList->SetGraphicsRootConstantBufferView(3, ssaoCBAddress);
 
-	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(3, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDepthSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mRandomVectorSrvIndex));
+	postProcess->BindRootDescriptor(cmdList);
+// 	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
+// 	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDepthSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mRandomVectorSrvIndex));
 
 	cmdList->SetPipelineState(mSsaoPSO.Get());
 

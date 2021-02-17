@@ -286,3 +286,8 @@ ScreenSpaceReflection-master/ScreenSpaceReflection-master/Source/Debug/vc141.idb
 ScreenSpaceReflection-master/ScreenSpaceReflection-master/Source/Debug/vc141.pdb
 .vs/MiniGraphic/v15/ipch/AutoPCH/4af4653e22770a8c/SSR.ipch
 .vs/MiniGraphic/v15/ipch/AutoPCH/c32baaa2abf7adaf/SSR.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/1dc3e6583883c91/GBUFFERSHADER.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/341085370382d206/POSTPROCESS.ipch
+Debug/PostProcess.obj
+Debug/Ssr.obj
+ScreenSpaceReflection-master/ScreenSpaceReflection-master/.vs/ScreenSpaceReflection/v15/ipch/AutoPCH/3f255dc6e1e8b2f4/MAIN.ipch

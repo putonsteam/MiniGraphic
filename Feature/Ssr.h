@@ -6,22 +6,24 @@ struct CBSsr
 {
 	DirectX::XMFLOAT4X4 gView = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 Proj;
-	DirectX::XMFLOAT4X4 InvProj;
-	DirectX::XMFLOAT4X4 ProjTex;
+	XMFLOAT2 Dimensions;
+	float FarClip;
 };
+
+class PostProcess;
 
 class Ssr
 {
 public:
-	Ssr(UINT width, UINT height);
+	Ssr(UINT width, UINT height, float farPlane);
 	void BuildSsrRootSignature();
 	void CreateSsrPSO();
 	void CreateSsrTex();
 	void CreateSsrDescriptors();
-	void ComputeSsr(ID3D12GraphicsCommandList* cmdList);
+	void ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProcess);
 	void UpdateSsrCB(const GameTimer& Timer);
 	void Update(const GameTimer& Timer);
-	void InitSsrCb();
+	void InitSsrCb(float farPlane);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetSsrSrvGpuHandle();
 	void SetNormalSrvIndex(int value) { mNormalSrvIndex = value; };
 	void SetWPosSrvIndex(int value) { mWPosSrvIndex = value; };

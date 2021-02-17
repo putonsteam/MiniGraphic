@@ -138,6 +138,12 @@
     <ClInclude Include="Feature\DeferredShading.h">
       <Filter>Feature</Filter>
     </ClInclude>
+    <ClInclude Include="Feature\Ssr.h">
+      <Filter>Feature</Filter>
+    </ClInclude>
+    <ClInclude Include="Feature\PostProcess.h">
+      <Filter>Feature</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicEngine\GraphicEngine.cpp">
@@ -210,6 +216,12 @@
       <Filter>Feature</Filter>
     </ClCompile>
     <ClCompile Include="Feature\DeferredShading.cpp">
+      <Filter>Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature\Ssr.cpp">
+      <Filter>Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature\PostProcess.cpp">
       <Filter>Feature</Filter>
     </ClCompile>
   </ItemGroup>

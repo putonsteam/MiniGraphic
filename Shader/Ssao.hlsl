@@ -16,8 +16,10 @@ cbuffer cbSsao : register(b0)
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D WorldPosTex    : register(t0);
 Texture2D gNormalMap     : register(t1);
-Texture2D gDepthMap     : register(t2);
-Texture2D gRandomVecMap : register(t3);
+Texture2D DeferredTex    : register(t2);
+
+Texture2D gDepthMap     : register(t3);
+Texture2D gRandomVecMap : register(t4);
 
 SamplerState gsamPointClamp : register(s0);
 SamplerState gsamLinearClamp : register(s1);

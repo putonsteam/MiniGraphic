@@ -7,6 +7,10 @@ DeferredShading::DeferredShading(int Width, int Height)
 	mTextureHeight = Height;
 	CreateGBufferTexture();
 	CreateGbufferView();
+
+	CreateDeferredTexture();
+	CreateDeferredView();
+
 	CreateGBufferPSO();
 	BuildPSO(L"Shader\\Default.hlsl", L"Shader\\Default.hlsl");
 }
@@ -41,6 +45,33 @@ void DeferredShading::CreateGBufferTexture()
 	}
 }
 
+void DeferredShading::CreateDeferredTexture()
+{
+	D3D12_RESOURCE_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
+	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texDesc.Alignment = 0;
+	texDesc.Width = mTextureWidth;
+	texDesc.Height = mTextureHeight;
+	texDesc.DepthOrArraySize = 1;
+	texDesc.MipLevels = 1;
+	texDesc.Format = GetEngine()->mBackBufferFormat;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	texDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	float ClearColor[] = { 0.0f, 0.0f, 1.0f, 0.0f };
+	CD3DX12_CLEAR_VALUE optClear(GetEngine()->mBackBufferFormat, ClearColor);
+		ThrowIfFailed(GetEngine()->GetDevice()->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&texDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			&optClear,
+			IID_PPV_ARGS(&mDeferredTex)));
+}
+
 void DeferredShading::CreateGbufferView()
 {
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
@@ -69,6 +100,30 @@ void DeferredShading::CreateGbufferView()
 			GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
 		mGBufferSrv[i] = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 	}
+}
+
+void DeferredShading::CreateDeferredView()
+{
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Format = GetEngine()->mBackBufferFormat;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.Texture2D.PlaneSlice = 0;
+	GetEngine()->GetDevice()->CreateRenderTargetView(mDeferredTex.Get(), &rtvDesc,
+		GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle());
+
+	mDeferredRtv = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorIndex();
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = GetEngine()->mBackBufferFormat;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	GetEngine()->GetDevice()->CreateShaderResourceView(mDeferredTex.Get(), &srvDesc,
+		GetEngine()->GetDescriptorHeap()->GetSrvDescriptorCpuHandle());
+	mDeferredSrv = GetEngine()->GetDescriptorHeap()->GetSrvDescriptorIndex();
 }
 
 void DeferredShading::RenderGBuffer(ID3D12GraphicsCommandList* cmdList)
@@ -188,19 +243,24 @@ void DeferredShading::Render(ID3D12GraphicsCommandList* mCommandList)
 
 	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
 	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
+	D3D12_CPU_DESCRIPTOR_HANDLE DeferredView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mDeferredRtv);
+
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
+		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	// Clear the back buffer and depth buffer.
-	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	//mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	mCommandList->ClearRenderTargetView(DeferredView, Colors::LightSteelBlue, 0, nullptr);
 
 	// Specify the buffers we are going to render to.
-	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
+	mCommandList->OMSetRenderTargets(1, &DeferredView, true, nullptr);
 
 	mCommandList->IASetVertexBuffers(0, 0, nullptr);
 	mCommandList->IASetIndexBuffer(nullptr);
 	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mCommandList->DrawInstanced(6, 1, 0, 0);
 
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE DeferredShading::GetGBufferSrvGpuHandle()

@@ -159,9 +159,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Feature\DeferredShading.h" />
+    <ClInclude Include="Feature\PostProcess.h" />
     <ClInclude Include="Feature\Ssao.h" />
     <ClInclude Include="Feature\ShadowMap.h" />
     <ClInclude Include="Feature\Sky.h" />
+    <ClInclude Include="Feature\Ssr.h" />
     <ClInclude Include="GraphicEngine\Camera.h" />
     <ClInclude Include="GraphicEngine\ConstantBuffer.h" />
     <ClInclude Include="GraphicEngine\DDSTextureLoader.h" />
@@ -196,9 +198,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Feature\DeferredShading.cpp" />
+    <ClCompile Include="Feature\PostProcess.cpp" />
     <ClCompile Include="Feature\Ssao.cpp" />
     <ClCompile Include="Feature\ShadowMap.cpp" />
     <ClCompile Include="Feature\Sky.cpp" />
+    <ClCompile Include="Feature\Ssr.cpp" />
     <ClCompile Include="GraphicEngine\Camera.cpp" />
     <ClCompile Include="GraphicEngine\DDSTextureLoader.cpp" />
     <ClCompile Include="GraphicEngine\FrameResource.cpp" />

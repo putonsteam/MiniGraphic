@@ -3,6 +3,7 @@
 #include "GraphicEngine.h"
 #include "LoadTexture.h"
 #include "LoadMaterial.h"
+#include "PostProcess.h"
 
 D3DApp::D3DApp()
 {
@@ -14,15 +15,18 @@ bool D3DApp::Init(int Width, int Height, HWND wnd)
 	GetEngine()->Init(Width, Height, wnd, D3D_FEATURE_LEVEL_11_0);
 	ThrowIfFailed(GetEngine()->GetCommandList()->Reset(GetEngine()->GetCommandAlloc(), nullptr));
 
+	mNearPlane = 1.0f;
+	mFarPlane = 1000.0f;
 	GetEngine()->SetPosition(0.0f, 2.0f, -15.0f);
-	GetEngine()->SetLens(0.25f*MathHelper::Pi, GetEngine()->AspectRatio(), 1.0f, 1000.0f);
+	GetEngine()->SetLens(0.25f*MathHelper::Pi, GetEngine()->AspectRatio(), mNearPlane, mFarPlane);
 
 	LoadRenderItem();
 	mCBFeature = make_unique<ConstantBuffer<CBFeature>>(GetEngine()->GetDevice(), 1, true);
 
 	mShadowMap = new ShadowMap(2048, 2048);
-	mSsao = new Ssao(Width, Height);
 	m_DeferredShading = new DeferredShading(Width, Height);
+	m_PostProcess = new PostProcess(Width, Height, mFarPlane);
+
 	GetEngine()->SendCommandAndFulsh();
 	return true;
 }
@@ -85,7 +89,8 @@ void D3DApp::Run()
 {
 	GetEngine()->Run();
  	Update(GetEngine()->GetTimer());
- 	Draw(GetEngine()->GetTimer());
+	m_PostProcess->Update(GetEngine()->GetTimer());
+ 	Render(GetEngine()->GetTimer());
 }
 
 void D3DApp::Update(const GameTimer& Timer)
@@ -105,7 +110,6 @@ void D3DApp::Update(const GameTimer& Timer)
 	}
 
 	mShadowMap->Update(Timer);
-	mSsao->Update(Timer);
 	UpdateFeatureCB(Timer);
 
 }
@@ -118,7 +122,7 @@ void D3DApp::UpdateFeatureCB(const GameTimer& Timer)
 	mCBFeature->Update(0, mFeatureCB);
 }
 
-void D3DApp::Draw(const GameTimer& Timer)
+void D3DApp::Render(const GameTimer& Timer)
 {
 	ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->GetCurrentCommandAllocator();
 	auto mCommandList = GetEngine()->GetCommandList();
@@ -147,30 +151,33 @@ void D3DApp::Draw(const GameTimer& Timer)
 
 	mShadowMap->DrawSceneToShadowMap();
 
-	mSsao->SetNormalSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Normal));
-	mSsao->SetWPosSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Pos));
-	mSsao->ComputeSsao(mCommandList);
-
 	mCommandList->SetGraphicsRootSignature(GetEngine()->GetBaseRootSignature());
 	GetEngine()->SetBaseRootSignature1();
 	mCommandList->SetGraphicsRootConstantBufferView(2, mCBFeature->Resource()->GetGPUVirtualAddress());
 	GetEngine()->SetBaseRootSignature3();
 	mCommandList->SetGraphicsRootDescriptorTable(4, mSky.GetSkyHeapStart());
 	mCommandList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
-	mCommandList->SetGraphicsRootDescriptorTable(6, mSsao->GetSsaoSrvGpuHandle());
+	//mCommandList->SetGraphicsRootDescriptorTable(6, mSsao->GetSsaoSrvGpuHandle());
 	mCommandList->SetGraphicsRootDescriptorTable(7, m_DeferredShading->GetGBufferSrvGpuHandle());
 
 	// Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+// 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+// 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	
 	m_DeferredShading->Render(mCommandList);
 
 	mSky.Draw(Timer);
 
+	m_PostProcess->Prepare(mCommandList, m_DeferredShading);
+	m_PostProcess->Render(mCommandList);
+ 	//mSsao->SetNormalSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Normal));
+ 	//mSsao->SetWPosSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Pos));
+
+	//m_PostProcess->Render(mCommandList);
+
 		// Indicate a state transition on the resource usage.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+// 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+// 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	// Done recording commands.
 	ThrowIfFailed(mCommandList->Close());
