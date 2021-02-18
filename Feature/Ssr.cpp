@@ -169,10 +169,12 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProces
 
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsrRootSignature.Get());
+	cmdList->SetPipelineState(mSsrPSO.Get());
+
+	postProcess->BindRootDescriptor(cmdList);
 	auto SsrCBAddress = mCBSsr->Resource()->GetGPUVirtualAddress();
 	cmdList->SetGraphicsRootConstantBufferView(3, SsrCBAddress);
 
-	cmdList->SetPipelineState(mSsrPSO.Get());
 
 	// Draw fullscreen quad.
 	cmdList->IASetVertexBuffers(0, 0, nullptr);

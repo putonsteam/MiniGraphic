@@ -175,6 +175,8 @@ float4 PS(VertexOut pin) : SV_Target
 	
 	occlusionSum /= gSampleCount;
 	
+	occlusionSum *= DeferredTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
+
 	float access = 1.0f - occlusionSum;
 
 	// Sharpen the contrast of the SSAO map to make the SSAO affect more dramatic.
