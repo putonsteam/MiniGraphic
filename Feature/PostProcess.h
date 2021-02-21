@@ -32,6 +32,5 @@ private:
 	D3D12_VIEWPORT mViewport;
 	D3D12_RECT mScissorRect;
 	ComPtr<ID3D12RootSignature> mPostProcessRootSignature;
-	Ssao* mSsao;
 	Ssr* mSsr;
 };

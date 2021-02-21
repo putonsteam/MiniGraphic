@@ -4,10 +4,11 @@
 
 struct CBSsr
 {
-	DirectX::XMFLOAT4X4 gView = MathHelper::Identity4x4();
-	DirectX::XMFLOAT4X4 Proj;
-	XMFLOAT2 Dimensions;
-	float FarClip;
+	DirectX::XMFLOAT4X4 gView;
+	DirectX::XMFLOAT4X4 gViewProj;
+	XMFLOAT3   EyePosW;
+	//XMFLOAT2 Dimensions;
+	//float FarClip;
 };
 
 class PostProcess;
@@ -27,6 +28,7 @@ public:
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetSsrSrvGpuHandle();
 	void SetNormalSrvIndex(int value) { mNormalSrvIndex = value; };
 	void SetWPosSrvIndex(int value) { mWPosSrvIndex = value; };
+	void InitPlane();
 
 private:
 	int mNormalSrvIndex;
@@ -45,5 +47,7 @@ private:
 
 	D3D12_VIEWPORT mViewport;
 	D3D12_RECT mScissorRect;
+
+	MeshInfo* mPlane;
 };
 

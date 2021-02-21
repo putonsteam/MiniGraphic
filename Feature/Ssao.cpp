@@ -196,10 +196,13 @@ void Ssao::ComputeSsao(ID3D12GraphicsCommandList* cmdList, PostProcess* postProc
 
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsaoRootSignature.Get());
+	cmdList->SetGraphicsRootDescriptorTable(0, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
+
 	auto ssaoCBAddress = mCBSsao->Resource()->GetGPUVirtualAddress();
 	cmdList->SetGraphicsRootConstantBufferView(3, ssaoCBAddress);
 
-	postProcess->BindRootDescriptor(cmdList);
+	//postProcess->BindRootDescriptor(cmdList);
 // 	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
 // 	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
 	cmdList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDepthSrvIndex));

@@ -18,7 +18,7 @@ PostProcess::PostProcess(int width, int height, float FarPlane)
 
 	mScissorRect = { 0, 0, (long)mWidth, (long)mHeight };
 
-	mSsao = new Ssao(mWidth, mHeight);
+	//mSsao = new Ssao(mWidth, mHeight);
 	mSsr = new Ssr(mWidth, mHeight, FarPlane);
 
 	CreatePostProcessTexture();
@@ -78,36 +78,50 @@ void PostProcess::CreatePostProcessView()
 
 void PostProcess::Prepare(ID3D12GraphicsCommandList* cmdList, DeferredShading* deferred)
 {
-// 	ID3D12Resource* deferredRes = deferred->GetDeferredResource();
-// 	// Copy 
-// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(deferredRes, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_SOURCE));
-// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mPostProcessTex.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-// 	cmdList->CopyResource(deferredRes, mPostProcessTex.Get());
-// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(deferredRes, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_GENERIC_READ));
-// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mPostProcessTex.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	// Copy 
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE));
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mPostProcessTex.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+	cmdList->CopyResource(mPostProcessTex.Get(), GetEngine()->CurrentBackBuffer());
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mPostProcessTex.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 	SetNormalSrvIndex(deferred->GetGBufferSrv(GBufferType::Normal));
 	SetWPosSrvIndex(deferred->GetGBufferSrv(GBufferType::Pos));
-	SetDeferredSrvIndex(deferred->GetDeferredSrv());
+	//SetDeferredSrvIndex(mPostProcessSrv);
+
 }
 
 void PostProcess::BindRootDescriptor(ID3D12GraphicsCommandList* cmdList)
 {
 	cmdList->SetGraphicsRootDescriptorTable(0, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
 	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
-	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mDeferredSrvIndex));
+	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mPostProcessSrv));
 }
 
 void PostProcess::Update(const GameTimer& Timer)
 {
-mSsao->Update(Timer);
 mSsr->Update(Timer);
 }
 
 void PostProcess::Render(ID3D12GraphicsCommandList* cmdList)
 {
-	mSsao->ComputeSsao(cmdList, this);
+	//mSsao->ComputeSsao(cmdList, this);
 	mSsr->ComputeSsr(cmdList, this);
+
+// 	//float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
+// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+// 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+// 
+// 	// Specify the buffers we are going to render to.
+// 	cmdList->OMSetRenderTargets(BUFFER_COUNT, &GetEngine()->CurrentBackBufferView(), true, &GetEngine()->DepthStencilView());
+// 
+// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+// 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+// 	for (int i = 0; i < BUFFER_COUNT; ++i)
+// 	{
+// 		cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),
+// 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+// 	}
 // 	cmdList->RSSetViewports(1, &mViewport);
 // 	cmdList->RSSetScissorRects(1, &mScissorRect);
 // 

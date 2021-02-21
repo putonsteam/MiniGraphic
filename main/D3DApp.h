@@ -11,6 +11,7 @@
 #include "DeferredShading.h"
 
 class PostProcess;
+class Ssao;
 
 class D3DApp
 {
@@ -35,6 +36,8 @@ private:
 	ShadowMap* mShadowMap;
 	DeferredShading* m_DeferredShading;
 	PostProcess* m_PostProcess;
+	Ssao* mSsao;
+
 };
 
 

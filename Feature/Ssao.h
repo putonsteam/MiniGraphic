@@ -36,6 +36,8 @@ public:
 	void BuildOffsetVectors();
 	void InitSsaoCb();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetSsaoSrvGpuHandle();
+	void SetNormalSrvIndex(int value) { mNormalSrvIndex = value; };
+	void SetWPosSrvIndex(int value) { mWPosSrvIndex = value; };
 
 private:
 	UINT mWidth;
@@ -48,6 +50,8 @@ private:
 	int mSsaoSrvIndex;
 	int mSsaoRtvIndex;
 	int mDepthSrvIndex;
+	int mNormalSrvIndex;
+	int mWPosSrvIndex;
 
 	ComPtr<ID3D12RootSignature> mSsaoRootSignature;
 	ComPtr<ID3D12PipelineState> mSsaoPSO;

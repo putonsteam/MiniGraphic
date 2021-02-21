@@ -1,125 +1,114 @@
-cbuffer cbNeverChanges : register(b0)
+struct VSInput
 {
-	float4x4 gView;
-	float4x4 gProjection;
-	float2 Dimensions;
-	float FarClip;
+	float3 PosL    : POSITION;
+	float3 NormalL : NORMAL;
+	float2 TexC    : TEXCOORD;
+};
+
+struct PSInput
+{
+	float4 position 	: SV_POSITION;
+	float3 positionW	: positionW;		// World space position
+};
+
+cbuffer FrameBuffer : register(b0)
+{
+	float4x4 mView;
+	float4x4 mViewProj;
+	float3   vEyePos;
 };
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D WorldPosTex    : register(t0);
 Texture2D gNormalMap     : register(t1);
 Texture2D DeferredTex    : register(t2);
-
 SamplerState gsamPointClamp : register(s0);
 SamplerState gsamLinearClamp : register(s1);
 SamplerState gsamDepthMap : register(s2);
 SamplerState gsamLinearWrap : register(s3);
 
-#define MAX_STEPS 300
-#define MAX_INTERSECT_DIST 0.04
+//Texture2D WorldPosTex : register(t0);
+//Texture2D g_texture2 : register(t2);
+//TextureCube g_EnvironmentLight : register(t3);
+//Texture2D g_texture5 : register(t5);
+//SamplerState g_sampler : register(s0);
 
-static const float2 gTexCoords[6] =
+struct PsOutput
 {
-    float2(0.0f, 1.0f),
-    float2(0.0f, 0.0f),
-    float2(1.0f, 0.0f),
-    float2(0.0f, 1.0f),
-    float2(1.0f, 0.0f),
-    float2(1.0f, 1.0f)
-};
- 
-struct VertexOut
-{
-    float4 PosH : SV_POSITION;
-	float2 TexC : TEXCOORD0;
+	float4 color 	: SV_TARGET;
+	//float depth 	: SV_DEPTH;
 };
 
-VertexOut VS(uint vid : SV_VertexID)
+PSInput VS(VSInput input)
 {
-    VertexOut vout;
-    vout.TexC = gTexCoords[vid];
+	PSInput result;
 
-    // Quad covering screen in NDC space.
-    vout.PosH = float4(2.0f*vout.TexC.x - 1.0f, 1.0f - 2.0f*vout.TexC.y, 0.0f, 1.0f);
+	float3 position = input.PosL;
+	position.y += 1.0f;
+	result.position = mul(float4(position, 1.0f), mViewProj);
 
-    return vout;
+	result.positionW = position;
+
+	return result;
 }
 
-float2 NormalizedDeviceCoordToScreenCoord(float2 ndc)
+
+
+PsOutput PS(PSInput input)
 {
-	float2 screenCoord;
-	screenCoord.x = Dimensions.x * (ndc.x + 1.0f) / 2.0f;
-	screenCoord.y = Dimensions.y * (1.0f - ((ndc.y + 1.0f) / 2.0f));
-	return screenCoord;
+	PsOutput result;
+
+	float3 p = input.positionW;//float3(0.0,-8.0f,60.0f);//
+
+	float3 vToPoint = normalize(p - vEyePos.xyz);
+	float3 vReflection = reflect(vToPoint, float3(0, 1, 0));
+
+	uint nNum = 40;
+	float fStep = 40.0 / nNum;
+
+	//
+	float4 color = float4(0, 0, 0, 0);
+	float value = 1.0f;
+	for (uint i = 1; i < nNum; ++i)
+	{
+		float3 vPointW = p + vReflection * i*fStep;
+
+		float4 vPointP = mul(float4(vPointW, 1.0f), mViewProj);
+		vPointP /= vPointP.w;
+
+		float2 uv = vPointP.xy;
+		uv += 1.0f;
+		uv /= 2.0f;
+		uv.y = 1.0f - uv.y;
+
+		//float4 tex = g_texture2.Sample(g_sampler, uv);
+		//if (tex.a != 0.0f)
+		//{
+			float depthR = mul(float4(vPointW, 1.0f), mView).z;
+			if (depthR <= -60.0f)
+				continue;
+
+			float3 positionT = WorldPosTex.Sample(gsamLinearClamp, uv).xyz;
+			float depthT = mul(float4(positionT, 1.0f), mView).z;
+
+			if (depthT > depthR)
+			{
+				color = DeferredTex.Sample(gsamLinearClamp, uv);
+				value = (float)i / (float)nNum;
+				break;
+			}
+		//}
+
+	}
+
+	//float4 environment = g_EnvironmentLight.SampleLevel(g_sampler, vReflection, 0);
+	//color = lerp(color, environment, value);
+
+	result.color = float4(color.xyz, 1.0f);
+
+	//
+	//float4 position = mul(float4(input.positionW.xyz, 1.0f), mViewProj);
+	//result.depth = position.z/position.w;
+
+	return result;
 }
-
-float4 PS(VertexOut pin) : SV_TARGET
-{
-	// Get viewspace normal and z-coord of this pixel.  
-	float3 n = normalize(gNormalMap.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz);
-
-	float3 p = WorldPosTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
-
-	float3 ref = normalize(reflect(p, n));
-	ref = mul(float4(ref, 1.0f), gView).xyz;
-
-	p = mul(float4(p, 1.0f), gView).xyz;
-
-   float2 coord;
-   float2 origin = pin.TexC * Dimensions;
-   float t = 1;
-   float4 reflRay = float4(ref, 1.0f);
-   float4 reflColor = float4(0, 0, 0, 0);
-
-   // Tracing code from http://casual-effects.blogspot.com/2014/08/screen-space-ray-tracing.html
-   // c - view space coordinate
-   // p - screen space coordinate
-   // k - perspective divide
-   float4 v0 = float4(p, 1.0f);
-   float4 v1 = v0 + reflRay * FarClip;
-
-   float4 p0 = mul(v0, gProjection);
-   float4 p1 = mul(v1, gProjection);
-
-   float k0 = 1.0f / p0.w;
-   float k1 = 1.0f / p1.w;
-
-   // 
-   p0 *= k0;
-   p1 *= k1;
-
-   p0.xy = NormalizedDeviceCoordToScreenCoord(p0.xy);
-   p1.xy = NormalizedDeviceCoordToScreenCoord(p1.xy);
-
-   v0 *= k0;
-   v1 *= k1;
-
-   float divisions = length(p1 - p0);
-   float3 dV = (v1 - v0) / divisions;
-   float dK = (k1 - k0) / divisions;
-   float2 traceDir = (p1 - p0) / divisions;
-
-   float maxSteps = min(MAX_STEPS, divisions);
-   //if (reflectivity > 0.0f)
-   {
-	   while (t < maxSteps)
-	   {
-		  coord = origin + traceDir * t;
-		  if (coord.x >= Dimensions.x || coord.y >= Dimensions.y || coord.x < 0 || coord.y < 0) break;
-
-		  float curDepth = (v0 + dV * t).z;
-		  curDepth /= k0 + dK * t; // Reverse the perspective divide back to view space
-		  float3 q = WorldPosTex.SampleLevel(gsamPointClamp, coord, 0.0f).xyz;
-		  float storedDepth = mul(float4(p, 1.0f), gView).z;
-		  if (curDepth > storedDepth && curDepth - storedDepth < MAX_INTERSECT_DIST)
-		  {
-			 reflColor = DeferredTex[coord];
-			 break;
-		  }
-		  t++;
-	   }
-   }
-   return reflColor;
-}
- 

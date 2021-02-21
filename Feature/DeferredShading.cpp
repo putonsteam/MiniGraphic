@@ -243,24 +243,24 @@ void DeferredShading::Render(ID3D12GraphicsCommandList* mCommandList)
 
 	mCommandList->RSSetViewports(1, GetEngine()->GetViewport());
 	mCommandList->RSSetScissorRects(1, GetEngine()->GetScissor());
-	D3D12_CPU_DESCRIPTOR_HANDLE DeferredView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mDeferredRtv);
-
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
-		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+// 	D3D12_CPU_DESCRIPTOR_HANDLE DeferredView = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mDeferredRtv);
+// 
+// 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
+// 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 	// Clear the back buffer and depth buffer.
-	mCommandList->ClearRenderTargetView(DeferredView, Colors::LightSteelBlue, 0, nullptr);
-
+	mCommandList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	//mCommandList->ClearDepthStencilView(GetEngine()->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	// Specify the buffers we are going to render to.
-	mCommandList->OMSetRenderTargets(1, &DeferredView, true, nullptr);
+	mCommandList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
 
 	mCommandList->IASetVertexBuffers(0, 0, nullptr);
 	mCommandList->IASetIndexBuffer(nullptr);
 	mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	mCommandList->DrawInstanced(6, 1, 0, 0);
 
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+// 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDeferredTex.Get(),
+// 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE DeferredShading::GetGBufferSrvGpuHandle()

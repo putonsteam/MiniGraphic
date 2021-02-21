@@ -175,7 +175,7 @@ float4 PS(VertexOut pin) : SV_Target
 	
 	occlusionSum /= gSampleCount;
 	
-	occlusionSum *= DeferredTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
+	//occlusionSum *= DeferredTex.SampleLevel(gsamPointClamp, pin.TexC, 0.0f).xyz;
 
 	float access = 1.0f - occlusionSum;
 

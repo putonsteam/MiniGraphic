@@ -24,7 +24,15 @@ Ssr::Ssr(UINT width, UINT height, float farPlane)
 	BuildSsrRootSignature();
 	CreateSsrPSO();
 
+	InitPlane();
+
 	InitSsrCb(farPlane);
+}
+
+void Ssr::InitPlane()
+{
+	mPlane = new MeshInfo;
+	mPlane->CreateGrid(5.0f, 5.0f, 5, 5);
 }
 
 void Ssr::Update(const GameTimer& Timer)
@@ -40,7 +48,7 @@ void Ssr::CreateSsrPSO()
 	ShaderState* shader = GetEngine()->GetShader();
 	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\Ssr.hlsl");
 	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\Ssr.hlsl");
-	SsrPsoDesc.InputLayout = { nullptr, 0 };
+	SsrPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
 	SsrPsoDesc.pRootSignature = mSsrRootSignature.Get();
 	SsrPsoDesc.VS =
 	{
@@ -58,7 +66,8 @@ void Ssr::CreateSsrPSO()
 	SsrPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	SsrPsoDesc.SampleMask = UINT_MAX;
 	SsrPsoDesc.NumRenderTargets = 1;
-	SsrPsoDesc.DepthStencilState.DepthEnable = false;
+	SsrPsoDesc.DepthStencilState.DepthEnable = true;
+	//SsrPsoDesc.DepthStencilState.DepthFunc = 
 	SsrPsoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	SsrPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	SsrPsoDesc.RTVFormats[0] = SsrMapFormat;
@@ -157,15 +166,15 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProces
 	// We compute the initial Ssr to AmbientMap0.
 
 	// Change to RENDER_TARGET.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mSsrMap.Get(),
-		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-	float clearValue[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	CD3DX12_CPU_DESCRIPTOR_HANDLE SsrHandle = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mSsrRtvIndex);
-	cmdList->ClearRenderTargetView(SsrHandle, clearValue, 0, nullptr);
+// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mSsrMap.Get(),
+// 		D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET));
+// 
+// 	float clearValue[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+// 	CD3DX12_CPU_DESCRIPTOR_HANDLE SsrHandle = GetEngine()->GetDescriptorHeap()->GetRtvDescriptorCpuHandle(mSsrRtvIndex);
+// 	cmdList->ClearRenderTargetView(SsrHandle, clearValue, 0, nullptr);
 
 	// Specify the buffers we are going to render to.
-	cmdList->OMSetRenderTargets(1, &SsrHandle, true, nullptr);
+	//cmdList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
 
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsrRootSignature.Get());
@@ -175,16 +184,20 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProces
 	auto SsrCBAddress = mCBSsr->Resource()->GetGPUVirtualAddress();
 	cmdList->SetGraphicsRootConstantBufferView(3, SsrCBAddress);
 
+	cmdList->IASetVertexBuffers(0, 1, &mPlane->VertexBufferView());
+	cmdList->IASetIndexBuffer(&mPlane->IndexBufferView());
+	cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// Draw fullscreen quad.
-	cmdList->IASetVertexBuffers(0, 0, nullptr);
-	cmdList->IASetIndexBuffer(nullptr);
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	cmdList->DrawInstanced(6, 1, 0, 0);
+	//D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = mCBPerObject->Resource()->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
+
+	//mCommandList->SetGraphicsRootConstantBufferView(0, objCBAddress);
+
+	cmdList->DrawIndexedInstanced(mPlane->IndexCount, 1, 0, 0, 0);
+
 
 	// Change back to GENERIC_READ so we can read the texture in a shader.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mSsrMap.Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
+// 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mSsrMap.Get(),
+// 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ));
 
 }
 
@@ -243,8 +256,8 @@ void Ssr::InitSsrCb(float farPlane)
 {
 	mCBSsr = make_unique<ConstantBuffer<CBSsr>>(GetEngine()->GetDevice(), 1, true);
 
-	SsrCB.FarClip = farPlane;
-	SsrCB.Dimensions = { (float)mWidth, (float)mHeight };
+	//SsrCB.FarClip = farPlane;
+	//SsrCB.Dimensions = { (float)mWidth, (float)mHeight };
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE Ssr::GetSsrSrvGpuHandle()
@@ -258,9 +271,11 @@ void Ssr::UpdateSsrCB(const GameTimer& Timer)
 
 	XMMATRIX view = GetEngine()->GetView();
 	XMMATRIX proj = GetEngine()->GetProj();
-
+	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+	//XMStoreFloat4x4(&SsrCB.gWorld, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&SsrCB.gView, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&SsrCB.Proj, XMMatrixTranspose(proj));
+	XMStoreFloat4x4(&SsrCB.gViewProj, XMMatrixTranspose(viewProj));
+	SsrCB.EyePosW = GetEngine()->GetCamera()->GetPosition3f();
 
 	mCBSsr->Update(0, SsrCB);
 }
