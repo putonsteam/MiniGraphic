@@ -274,6 +274,7 @@ void Ssr::UpdateSsrCB(const GameTimer& Timer)
 	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 	//XMStoreFloat4x4(&SsrCB.gWorld, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&SsrCB.gView, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&SsrCB.Proj, XMMatrixTranspose(proj));
 	XMStoreFloat4x4(&SsrCB.gViewProj, XMMatrixTranspose(viewProj));
 	SsrCB.EyePosW = GetEngine()->GetCamera()->GetPosition3f();
 

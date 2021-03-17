@@ -6,6 +6,7 @@ struct CBSsr
 {
 	DirectX::XMFLOAT4X4 gView;
 	DirectX::XMFLOAT4X4 gViewProj;
+	DirectX::XMFLOAT4X4 Proj;
 	XMFLOAT3   EyePosW;
 	//XMFLOAT2 Dimensions;
 	//float FarClip;
