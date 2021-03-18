@@ -1,14 +1,8 @@
-struct VSInput
-{
-	float3 PosL    : POSITION;
-	float3 NormalL : NORMAL;
-	float2 TexC    : TEXCOORD;
-};
-
 struct PSInput
 {
-	float4 position 	: SV_POSITION;
-	float3 positionW	: positionW;		// World space position
+	float4 PosH : SV_POSITION;
+
+	float2 TexC : TEXCOORD0;
 };
 
 cbuffer FrameBuffer : register(b0)
@@ -38,26 +32,31 @@ SamplerState gsamLinearWrap : register(s3);
 //Texture2D g_texture5 : register(t5);
 //SamplerState g_sampler : register(s0);
 
-struct PsOutput
+
+
+static const float2 gTexCoords[6] =
 {
-	float4 color 	: SV_TARGET;
-	//float depth 	: SV_DEPTH;
+	float2(0.0f, 1.0f),
+	float2(0.0f, 0.0f),
+	float2(1.0f, 0.0f),
+	float2(0.0f, 1.0f),
+	float2(1.0f, 0.0f),
+	float2(1.0f, 1.0f)
 };
 
 #define MAX_STEPS 300
 #define MAX_INTERSECT_DIST 0.04
 
-PSInput VS(VSInput input)
+PSInput VS(uint vid : SV_VertexID)
 {
-	PSInput result;
+	PSInput vout;
 
-	float3 position = input.PosL;
-	position.y += 1.0f;
-	result.position = mul(float4(position, 1.0f), mViewProj);
+	vout.TexC = gTexCoords[vid];
 
-	result.positionW = position;
+	// Quad covering screen in NDC space.
+	vout.PosH = float4(2.0f*vout.TexC.x - 1.0f, 1.0f - 2.0f*vout.TexC.y, 0.0f, 1.0f);
 
-	return result;
+	return vout;
 }
 
 float2 NormalizedDeviceCoordToScreenCoord(float2 ndc)
@@ -70,28 +69,25 @@ float2 NormalizedDeviceCoordToScreenCoord(float2 ndc)
 	return screenCoord;
 }
 
-PsOutput PS(PSInput input)
+float4 PS(PSInput input) : SV_Target
 {
 	float4 Dimensions = float4(800, 600, 0, 0);
 
-	PsOutput result;
 	float FarClip = 100;
+	int2 coord;
+	int2 origin = input.TexC * Dimensions;
 	
 	float4 reflColor = float4(0, 0, 0, 0);
 	float t = 1;
 	//float reflectivity = material[origin].x;
 
-
-	float3 p = input.positionW;//float3(0.0,-8.0f,60.0f);//
-
-	float3 vToPoint = normalize(p - vEyePos.xyz);
-	float3 reflRay = reflect(vToPoint, float3(0, 1, 0));
-
-	float3 d = normalize(input.positionW - vEyePos.xyz);
-	float3 refl = normalize(reflect(d, float3(0, 1.0f, 0)));
+	float3 p = camPos[origin].xyz;
+	float3 d = normalize(p - vEyePos.xyz);
+	float3 n = gNormalMap[origin].xyz;
+	float3 refl = normalize(reflect(d, n));
 	float3 ScreenRefl = mul(float4(refl, 0), mView);
 
-	float4 v0 = mul(float4(input.positionW, 1), mView);
+	float4 v0 = mul(float4(p, 1), mView);
 	float4 v1 = v0 + float4(ScreenRefl, 0) * FarClip;
 
 	float4 p0 = mul(v0, Projection);
@@ -104,12 +100,6 @@ PsOutput PS(PSInput input)
 	p0 *= k0;
 	p1 *= k1;
 
-	float2 uv = p0.xy;
-	uv += 1.0f;
-	uv /= 2.0f;
-	uv.y = 1.0f - uv.y;
-	int2 origin = uv * Dimensions;
-	int2 coord;
 	p0.xy = NormalizedDeviceCoordToScreenCoord(p0.xy);
 	p1.xy = NormalizedDeviceCoordToScreenCoord(p1.xy);
 
@@ -140,61 +130,8 @@ PsOutput PS(PSInput input)
 			t++;
 		}
 	}
-	result.color = renderTx[origin] * (1.0f - 0.5) + reflColor * 0.5;
+	return renderTx[origin] * (1.0f - 0.5) + reflColor * 0.5;
 
-	return result;
-
-
-
-
-	//uint nNum = 40;
-	//float fStep = 40.0 / nNum;
-
-	////
-	//float4 color = float4(0, 0, 0, 0);
-	//float value = 1.0f;
-	//for (uint i = 1; i < nNum; ++i)
-	//{
-	//	float3 vPointW = p + vReflection * i*fStep;
-
-	//	float4 vPointP = mul(float4(vPointW, 1.0f), mViewProj);
-	//	vPointP /= vPointP.w;
-
-	//	float2 uv = vPointP.xy;
-	//	uv += 1.0f;
-	//	uv /= 2.0f;
-	//	uv.y = 1.0f - uv.y;
-
-	//	//float4 tex = g_texture2.Sample(g_sampler, uv);
-	//	//if (tex.a != 0.0f)
-	//	//{
-	//		float depthR = mul(float4(vPointW, 1.0f), mView).z;
-	//		if (depthR <= -60.0f)
-	//			continue;
-
-	//		float3 positionT = WorldPosTex.Sample(gsamLinearClamp, uv).xyz;
-	//		float depthT = mul(float4(positionT, 1.0f), mView).z;
-
-	//		if (depthT > depthR)
-	//		{
-	//			color = DeferredTex.Sample(gsamLinearClamp, uv);
-	//			value = (float)i / (float)nNum;
-	//			break;
-	//		}
-	//	//}
-
-	//}
-
-	////float4 environment = g_EnvironmentLight.SampleLevel(g_sampler, vReflection, 0);
-	////color = lerp(color, environment, value);
-
-	//result.color = float4(color.xyz, 1.0f);
-
-	////
-	////float4 position = mul(float4(input.positionW.xyz, 1.0f), mViewProj);
-	////result.depth = position.z/position.w;
-
-	//return result;
 
 
 }

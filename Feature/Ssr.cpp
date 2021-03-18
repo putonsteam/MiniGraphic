@@ -48,7 +48,8 @@ void Ssr::CreateSsrPSO()
 	ShaderState* shader = GetEngine()->GetShader();
 	ComPtr<ID3DBlob> vs = shader->CreateVSShader(L"Shader\\Ssr.hlsl");
 	ComPtr<ID3DBlob> ps = shader->CreatePSShader(L"Shader\\Ssr.hlsl");
-	SsrPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
+	//SsrPsoDesc.InputLayout = { shader->GetLayout().data(), (UINT)shader->GetLayout().size() };
+	SsrPsoDesc.InputLayout = { nullptr, 0 };
 	SsrPsoDesc.pRootSignature = mSsrRootSignature.Get();
 	SsrPsoDesc.VS =
 	{
@@ -184,15 +185,20 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProces
 	auto SsrCBAddress = mCBSsr->Resource()->GetGPUVirtualAddress();
 	cmdList->SetGraphicsRootConstantBufferView(3, SsrCBAddress);
 
-	cmdList->IASetVertexBuffers(0, 1, &mPlane->VertexBufferView());
-	cmdList->IASetIndexBuffer(&mPlane->IndexBufferView());
-	cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetVertexBuffers(0, 0, nullptr);
+	cmdList->IASetIndexBuffer(nullptr);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->DrawInstanced(6, 1, 0, 0);
+
+// 	cmdList->IASetVertexBuffers(0, 1, &mPlane->VertexBufferView());
+// 	cmdList->IASetIndexBuffer(&mPlane->IndexBufferView());
+// 	cmdList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = mCBPerObject->Resource()->GetGPUVirtualAddress() + ri->ObjCBIndex*objCBByteSize;
 
 	//mCommandList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 
-	cmdList->DrawIndexedInstanced(mPlane->IndexCount, 1, 0, 0, 0);
+	//cmdList->DrawIndexedInstanced(mPlane->IndexCount, 1, 0, 0, 0);
 
 
 	// Change back to GENERIC_READ so we can read the texture in a shader.
