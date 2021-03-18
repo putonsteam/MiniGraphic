@@ -479,13 +479,13 @@ void GraphicEngine::BuildBaseRootSignature()
 	texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable1;
-	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0);
+	texTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable2;
-	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 2, 0);
+	texTable2.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 10, 2, 0);
 
 	CD3DX12_DESCRIPTOR_RANGE texTable3;
-	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 5, 0);
+	texTable3.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 13, 0);
 
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[8];

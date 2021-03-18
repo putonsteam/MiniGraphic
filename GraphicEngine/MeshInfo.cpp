@@ -162,3 +162,42 @@ void MeshInfo::CreateGrid(float width, float depth, uint32 m, uint32 n)
 	IndexFormat = DXGI_FORMAT_R16_UINT;
 	IndexBufferByteSize = ibByteSize;
 }
+
+void MeshInfo::CreateBox(float width, float height, float depth, uint32 numSubdivisions)
+{
+	GeometryGenerator geoGen;
+	GeometryGenerator::MeshData box = geoGen.CreateBox(width, height, depth, numSubdivisions);
+
+	IndexCount = (UINT)box.Indices32.size();
+	auto totalVertexCount = box.Vertices.size();
+
+	vector<Vertex> vertices(totalVertexCount);
+
+	for (size_t i = 0; i < totalVertexCount; ++i)
+	{
+		vertices[i].Pos = box.Vertices[i].Position;
+		vertices[i].Normal = box.Vertices[i].Normal;
+		vertices[i].TexC = box.Vertices[i].TexC;
+	}
+	vector<uint16_t> indices;
+
+	indices.insert(indices.end(), begin(box.GetIndices16()), end(box.GetIndices16()));
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+	Name = "grid";
+
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &VertexBufferCPU));
+	CopyMemory(VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &IndexBufferCPU));
+	CopyMemory(IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+	VertexBufferGPU = GetEngine()->CreateDefaultBuffer(vertices.data(), vbByteSize, VertexBufferUploader);
+
+	IndexBufferGPU = GetEngine()->CreateDefaultBuffer(indices.data(), ibByteSize, IndexBufferUploader);
+
+	VertexByteStride = sizeof(Vertex);
+	VertexBufferByteSize = vbByteSize;
+	IndexFormat = DXGI_FORMAT_R16_UINT;
+	IndexBufferByteSize = ibByteSize;
+}

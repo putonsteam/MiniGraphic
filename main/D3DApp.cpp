@@ -82,6 +82,52 @@ void D3DApp::LoadRenderItem()
 	gridRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	GetEngine()->AddRenderItem(RenderLayer::Opaque, gridRitem);
 
+	auto plane = std::make_unique<MeshInfo>();
+	plane->CreateGrid(2.0f, 3.0f, 6, 4);
+	auto planeRitem = std::make_unique<RenderItem>();
+	planeRitem->IndexCount = plane->IndexCount;
+
+	auto tile1 = std::make_unique<LoadMaterial>();
+	tile1->Name = "tile0";
+	tile1->MatCBIndex = 2;
+	tile1->SetDiffuseSrv(L"source/Textures/plane.dds");
+	tile1->DiffuseAlbedo = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
+	tile1->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
+
+	tile1->Roughness = 0.1f;
+
+	planeRitem->World = MathHelper::Identity4x4();
+	XMStoreFloat4x4(&planeRitem->World, XMMatrixTranslation(0.0f, 2.0f, 0.0f));
+	XMStoreFloat4x4(&planeRitem->TexTransform, XMMatrixScaling(2.0f, 2.0f, 1.0f));
+	planeRitem->ObjCBIndex = 2;
+	planeRitem->Mat = move(tile1);
+	planeRitem->Geo = move(plane);
+	planeRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	GetEngine()->AddRenderItem(RenderLayer::Opaque, planeRitem);
+
+	//auto box = std::make_unique<MeshInfo>();
+	//box->CreateGrid(20.0f, 30.0f, 60, 40);
+	//auto boxRitem = std::make_unique<RenderItem>();
+	//boxRitem->IndexCount = box->IndexCount;
+
+	//auto tile2 = std::make_unique<LoadMaterial>();
+	//tile2->Name = "tile2";
+	//tile2->MatCBIndex = 2;
+	//tile2->SetDiffuseSrv(L"source/Textures/crate.dds");
+	//tile2->DiffuseAlbedo = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
+	//tile2->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
+
+	//tile2->Roughness = 0.1f;
+
+	//boxRitem->World = MathHelper::Identity4x4();
+	//XMStoreFloat4x4(&boxRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
+	//boxRitem->ObjCBIndex = 2;
+	//boxRitem->Mat = move(tile2);
+	//boxRitem->Geo = move(box);
+	//boxRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	//GetEngine()->AddRenderItem(RenderLayer::Opaque, boxRitem);
+
 	mSky.LoadRenderItem();
 	GetEngine()->CreateShaderParameter();
 

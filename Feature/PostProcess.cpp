@@ -106,7 +106,7 @@ mSsr->Update(Timer);
 void PostProcess::Render(ID3D12GraphicsCommandList* cmdList)
 {
 	//mSsao->ComputeSsao(cmdList, this);
-	mSsr->ComputeSsr(cmdList, this);
+	//mSsr->ComputeSsr(cmdList, this);
 
 // 	//float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
 // 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),

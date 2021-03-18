@@ -15,16 +15,16 @@ struct MaterialData
 
 TextureCube gCubeMap : register(t0);
 Texture2D gShadowMap : register(t1);
-Texture2D gSsaoMap : register(t4);
+Texture2D gSsaoMap : register(t12);
 
-Texture2D DiffuseTex : register(t5);
-Texture2D WorldPosTex : register(t6);
-Texture2D WorldNormalTex : register(t7);
-Texture2D materialTex: register(t8);
+Texture2D DiffuseTex : register(t13);
+Texture2D WorldPosTex : register(t14);
+Texture2D WorldNormalTex : register(t15);
+Texture2D materialTex: register(t16);
 
 // An array of textures, which is only supported in shader model 5.1+.  Unlike Texture2DArray, the textures
 // in this array can be different sizes and formats, making it more flexible than texture arrays.
-Texture2D gDiffuseMap[2] : register(t2);
+Texture2D gDiffuseMap[10] : register(t2);
 
 
 // Put in space1, so the texture array does not overlap with these resources.  
