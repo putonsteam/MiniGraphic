@@ -19,6 +19,7 @@ cbuffer FrameBuffer : register(b0)
 Texture2D camPos    : register(t0);
 Texture2D gNormalMap     : register(t1);
 Texture2D renderTx    : register(t2);
+Texture2D FeatureAttr    : register(t3);
 SamplerState gsamPointClamp : register(s0);
 SamplerState gsamLinearClamp : register(s1);
 SamplerState gsamDepthMap : register(s2);
@@ -79,7 +80,7 @@ float4 PS(PSInput input) : SV_Target
 	
 	float4 reflColor = float4(0, 0, 0, 0);
 	float t = 1;
-	//float reflectivity = material[origin].x;
+	float reflectivity = FeatureAttr[origin].x;
 
 	float3 p = camPos[origin].xyz;
 	float3 d = normalize(p - vEyePos.xyz);
@@ -112,7 +113,7 @@ float4 PS(PSInput input) : SV_Target
 	float2 traceDir = (p1 - p0) / divisions;
 
 	float maxSteps = min(MAX_STEPS, divisions);
-	//if (reflectivity > 0.0f)
+	if (reflectivity > 0.0f)
 	{
 		while (t < maxSteps)
 		{
@@ -130,7 +131,7 @@ float4 PS(PSInput input) : SV_Target
 			t++;
 		}
 	}
-	return renderTx[origin] * (1.0f - 0.5) + reflColor * 0.5;
+	return renderTx[origin] * (1.0f - reflectivity) + reflColor * reflectivity;
 
 
 

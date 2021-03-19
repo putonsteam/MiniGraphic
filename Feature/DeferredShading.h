@@ -7,6 +7,7 @@ enum GBufferType
 	Pos,
 	Normal,
 	Material,
+	FeatureAttr,
 	Total,
 };
 

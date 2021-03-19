@@ -87,6 +87,7 @@ void PostProcess::Prepare(ID3D12GraphicsCommandList* cmdList, DeferredShading* d
 
 	SetNormalSrvIndex(deferred->GetGBufferSrv(GBufferType::Normal));
 	SetWPosSrvIndex(deferred->GetGBufferSrv(GBufferType::Pos));
+	SetFeatureAttrSrvIndex(deferred->GetGBufferSrv(GBufferType::FeatureAttr));
 	//SetDeferredSrvIndex(mPostProcessSrv);
 
 }
@@ -96,6 +97,7 @@ void PostProcess::BindRootDescriptor(ID3D12GraphicsCommandList* cmdList)
 	cmdList->SetGraphicsRootDescriptorTable(0, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mWPosSrvIndex));
 	cmdList->SetGraphicsRootDescriptorTable(1, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mNormalSrvIndex));
 	cmdList->SetGraphicsRootDescriptorTable(2, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mPostProcessSrv));
+	cmdList->SetGraphicsRootDescriptorTable(4, GetEngine()->GetDescriptorHeap()->GetSrvDescriptorGpuHandle(mFeatureAttrSrvIndex));
 }
 
 void PostProcess::Update(const GameTimer& Timer)
@@ -106,7 +108,7 @@ mSsr->Update(Timer);
 void PostProcess::Render(ID3D12GraphicsCommandList* cmdList)
 {
 	//mSsao->ComputeSsao(cmdList, this);
-	//mSsr->ComputeSsr(cmdList, this);
+	mSsr->ComputeSsr(cmdList, this);
 
 // 	//float clearValue[] = { 0.0f, 0.0f, 1.0f, 0.0f };
 // 	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetEngine()->CurrentBackBuffer(),

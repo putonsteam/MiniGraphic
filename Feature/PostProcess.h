@@ -18,11 +18,13 @@ public:
 	void Update(const GameTimer& Timer);
 	void SetNormalSrvIndex(int value) { mNormalSrvIndex = value; };
 	void SetWPosSrvIndex(int value) { mWPosSrvIndex = value; };
+	void SetFeatureAttrSrvIndex(int value) { mFeatureAttrSrvIndex = value; };
 	void SetDeferredSrvIndex(int value) { mDeferredSrvIndex = value; };
 
 private:
 	int mNormalSrvIndex;
 	int mWPosSrvIndex;
+	int mFeatureAttrSrvIndex;
 	int mDeferredSrvIndex;
 	int mWidth;
 	int mHeight;

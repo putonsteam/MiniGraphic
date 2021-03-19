@@ -8,7 +8,7 @@ struct MaterialData
 	float    Roughness;
 	float4x4 MatTransform;
 	uint     DiffuseMapIndex;
-	uint     MatPad0;
+	float    SsrAttr;
 	uint     MatPad1;
 	uint     MatPad2;
 };

@@ -21,6 +21,7 @@ struct PixelOut
 	float4 worldPos:SV_Target2;
 	float4 worldNormal:SV_Target3;
 	float4 material:SV_Target4;
+	float4 FeatureAttr:SV_Target5;
 };
 
 VertexOut VS(VertexIn vin)
@@ -62,6 +63,7 @@ PixelOut PS(VertexOut pin) : SV_Target
 	pixelOut.worldNormal = float4(normalize(pin.NormalW), 1.0f);
 
 	pixelOut.worldPos = float4(pin.PosW, 1.0f);
+	pixelOut.FeatureAttr = float4(matData.SsrAttr, 0, 0, 0);
 
 	return pixelOut;
 }

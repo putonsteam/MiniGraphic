@@ -407,6 +407,7 @@ void GraphicEngine::UpdateMaterialBuffer(const GameTimer& Timer)
 				matData.DiffuseAlbedo = mat->DiffuseAlbedo;
 				matData.FresnelR0 = mat->FresnelR0;
 				matData.Roughness = mat->Roughness;
+				matData.SsrAttr = mat->SsrAttr;
 				XMStoreFloat4x4(&matData.MatTransform, XMMatrixTranspose(matTransform));
 				matData.DiffuseMapIndex = mat->DiffuseSrvHeapIndex;
 				//matData.NormalMapIndex = mat->NormalSrvHeapIndex;
