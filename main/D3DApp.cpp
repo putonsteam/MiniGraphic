@@ -53,8 +53,8 @@ void D3DApp::LoadRenderItem()
 	skullMat->SetDiffuseSrv(L"source/Textures/white1x1.dds");
 	skullRitem->Mat = move(skullMat);
 
-	//XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.4f, 0.4f, 0.4f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
-	XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.000004f, 0.0000004f, 0.0000004f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
+XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.4f, 0.4f, 0.4f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
+	//XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.000004f, 0.0000004f, 0.0000004f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
 	skullRitem->TexTransform = MathHelper::Identity4x4();
 	skullRitem->ObjCBIndex = 0;
 	skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -76,8 +76,8 @@ void D3DApp::LoadRenderItem()
 	tile0->Roughness = 0.1f;
 
 	gridRitem->World = MathHelper::Identity4x4();
-	//XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
-	XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(0.000001f, 0.000001f, 0.000001f));
+	XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(8.0f, 8.0f, 1.0f));
+	//XMStoreFloat4x4(&gridRitem->TexTransform, XMMatrixScaling(0.000001f, 0.000001f, 0.000001f));
 
 	gridRitem->ObjCBIndex = 1;
 	gridRitem->Mat = move(tile0);
@@ -224,7 +224,7 @@ void D3DApp::Render(const GameTimer& Timer)
 	m_DeferredShading->Render(mCommandList);
 
 
-	//mSky.Draw(Timer);
+	mSky.Draw(Timer);
 
 	m_PostProcess->Prepare(mCommandList, m_DeferredShading);
 	m_PostProcess->Render(mCommandList);

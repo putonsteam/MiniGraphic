@@ -48,7 +48,7 @@ float4 PS(VertexOut pin) : SV_Target
     float ambientAccess = gSsaoMap.Sample(gsamLinearClamp, pin.TexC, 0.0f).r;
 
     // Light terms.
-	float4 ambient = gAmbientLight * diffuse;// *ambientAccess;
+	float4 ambient = gAmbientLight * diffuse * ambientAccess;
 
 	float shadowFactor = CalcShadowFactor(mul(float4(worldPos, 1.0f), gShadowTransform));
 	const float shininess = 1.0f - roughness;
