@@ -181,7 +181,8 @@ void Ssr::ComputeSsr(ID3D12GraphicsCommandList* cmdList, PostProcess* postProces
 
 	// Specify the buffers we are going to render to.
 	//cmdList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
-
+	cmdList->ClearRenderTargetView(GetEngine()->CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	cmdList->OMSetRenderTargets(1, &GetEngine()->CurrentBackBufferView(), true, nullptr);
 	// Bind the constant buffer for this pass.
 	cmdList->SetGraphicsRootSignature(mSsrRootSignature.Get());
 	cmdList->SetPipelineState(mSsrPSO.Get());
