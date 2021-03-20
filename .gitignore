@@ -302,3 +302,10 @@ ScreenSpaceReflection-master/ScreenSpaceReflection-master/.vs/ScreenSpaceReflect
 .vs/MiniGraphic/v15/ipch/AutoPCH/59a3fd3cf9c848eb/SSAO.ipch
 .vs/MiniGraphic/v15/ipch/AutoPCH/47e4abb381f2b02f/SSR.ipch
 .vs/MiniGraphic/v15/ipch/AutoPCH/2eb9d59451792da7/SHADERSTATE.ipch
+Debug/ssr.obj.enc
+Debug/postprocess.obj.enc
+.vs/MiniGraphic/v15/ipch/AutoPCH/d3b5015394fa7486/POSTPROCESS.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/781a79a354f20aa0/D3DAPP.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/43b3180637f3a8a0/DEFERREDSHADING.ipch
+.vs/MiniGraphic/v15/ipch/AutoPCH/25317f10f6a58f59/GRAPHICENGINE.ipch
+ScreenSpaceReflection-master/ScreenSpaceReflection-master/.vs/ScreenSpaceReflection/v16/Browse.VC.db

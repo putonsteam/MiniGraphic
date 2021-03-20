@@ -37,7 +37,7 @@ private:
 	UINT mWidth;
 	UINT mHeight;
 	ComPtr<ID3D12Resource> mSsrMap = nullptr;
-	static const DXGI_FORMAT SsrMapFormat = DXGI_FORMAT_R16_UNORM;
+	static const DXGI_FORMAT SsrMapFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	int mSsrSrvIndex;
 	int mSsrRtvIndex;
 

@@ -202,7 +202,7 @@ void D3DApp::Render(const GameTimer& Timer)
 	mCommandList->SetGraphicsRootDescriptorTable(5, GetEngine()->GetSrvDescHeap()->GetGPUDescriptorHandleForHeapStart());
 	m_DeferredShading->RenderGBuffer(mCommandList);
 
-	//mShadowMap->DrawSceneToShadowMap();
+	mShadowMap->DrawSceneToShadowMap();
 
 	mSsao->SetNormalSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Normal));
 	mSsao->SetWPosSrvIndex(m_DeferredShading->GetGBufferSrv(GBufferType::Pos));

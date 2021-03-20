@@ -192,6 +192,7 @@ void DeferredShading::CreateGBufferPSO()
 	GbufferPsoDesc.RTVFormats[1] = mGbufferFormat;
 	GbufferPsoDesc.RTVFormats[2] = mGbufferFormat;
 	GbufferPsoDesc.RTVFormats[3] = mGbufferFormat;
+	GbufferPsoDesc.RTVFormats[4] = mGbufferFormat;
 	GbufferPsoDesc.SampleDesc.Count = 1;
 	GbufferPsoDesc.SampleDesc.Quality = 0;
 	GbufferPsoDesc.DSVFormat = GetEngine()->mDepthStencilFormat;
