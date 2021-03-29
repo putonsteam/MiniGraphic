@@ -399,3 +399,8 @@ XFramework/Debug/XSSAO.obj
 XFramework/Debug/XTexture.obj
 XFramework/Debug/XVertexIndexLoader.obj
 XFramework/Debug/XVoxelConeTracing.obj
+.vs/MiniGraphic/v15/ipch/AutoPCH/f289dc5677e9f54/SKY.ipch
+XFramework/.vs/XFramework/v15/ipch/AutoPCH/4c9f40464eefc3eb/XSHADER.ipch
+XFramework/.vs/XFramework/v15/ipch/AutoPCH/78b53a69ee171e80/XSHADER.ipch
+XFramework/.vs/XFramework/v15/ipch/AutoPCH/826bfc83d0fe7c61/XENTITY.ipch
+XFramework/.vs/XFramework/v15/ipch/AutoPCH/86b7a9f7e473f35a/XENTITY.ipch
