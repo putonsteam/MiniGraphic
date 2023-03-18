@@ -13,7 +13,7 @@
 #include <tchar.h>
 #include <dxgi1_6.h>
 #include <d3d12.h>
-#include <atlbase.h>
+//#include <atlbase.h>
 #include "d3dx12.h"
 #include <stdint.h>
 #include <d3d11_1.h>
