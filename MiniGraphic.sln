@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.1145
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniGraphic", "MiniGraphic.vcxproj", "{7631B393-E108-4D4C-BE19-74B93BA3522F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DX12", "MiniGraphic.vcxproj", "{7631B393-E108-4D4C-BE19-74B93BA3522F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
